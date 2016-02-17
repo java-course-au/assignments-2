@@ -45,7 +45,7 @@ public class LazyFactory {
 
     private static class LockFreeMultipleThreadLazy<T> implements Lazy<T> {
         private Supplier<T> supplier;
-        private volatile T result;
+        private volatile Object result = NONE;
 
         private static final Object NONE = new Object();
 
@@ -67,7 +67,7 @@ public class LazyFactory {
                     }
                 }
             }
-            return result;
+            return (T) result;
         }
     }
 

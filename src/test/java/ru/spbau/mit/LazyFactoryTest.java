@@ -63,6 +63,7 @@ public class LazyFactoryTest {
         if (!areMultipleCalculationsAllowed) {
             assertEquals(supplier.getCounter(), 1);
         }
+        assertEquals(results.get(0), supplier.get());
     }
 
     public <T> void checkMultiThreading(Function<CounterSupplier<T>, Lazy<T>> getLazyFactory,
