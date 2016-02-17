@@ -12,7 +12,7 @@ public class LazyLockFree<T> implements Lazy<T> {
     private Supplier<T> supplier;
     private volatile Object data = NONE;
 
-    private final static AtomicReferenceFieldUpdater<LazyLockFree, Object> updater
+    private static final AtomicReferenceFieldUpdater<LazyLockFree, Object> UPDATER
             = AtomicReferenceFieldUpdater.newUpdater(LazyLockFree.class, Object.class, "data");
 
     public LazyLockFree(final Supplier<T> supplier) {
@@ -24,11 +24,11 @@ public class LazyLockFree<T> implements Lazy<T> {
         if (data == NONE) {
             Supplier<T> local = supplier;
             if (local != null) {
-                if (updater.compareAndSet(this, NONE, local.get())) {
+                if (UPDATER.compareAndSet(this, NONE, local.get())) {
                     supplier = null;
                 }
             }
         }
-        return (T)data;
+        return (T) data;
     }
 }
