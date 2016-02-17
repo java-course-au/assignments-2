@@ -1,6 +1,5 @@
 package ru.spbau.mit;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
