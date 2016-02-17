@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 public final class SecondPartTasks {
     private static final int ITERATIONS_NUMBER = 10000000;
     private static final double RADIUS = 0.5;
+    private static final Random RANDOM = new Random();
 
     private SecondPartTasks() {}
 
@@ -39,23 +40,12 @@ public final class SecondPartTasks {
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
     // какова вероятность попасть в мишень.
     public static double piDividedBy4() {
-        class Point {
-            private double x, y;
-
-            Point(double x, double y) {
-                this.x = x;
-                this.y = y;
-            }
-
-            public double getDistance() {
-                return Math.sqrt(x * x + y * y);
-            }
-        }
-        Random random = new Random();
         return Stream.
-                generate(() -> new Point(random.nextDouble() - RADIUS, random.nextDouble() - RADIUS)).
+                generate(() ->
+                        Math.pow(RANDOM.nextDouble() - RADIUS, 2) + Math.pow(RANDOM.nextDouble() - RADIUS, 2)).
                 limit(ITERATIONS_NUMBER).
-                filter(point -> point.getDistance() <= RADIUS).count() * 1.0 / ITERATIONS_NUMBER;
+                filter(d -> d <= RADIUS * RADIUS).
+                count() * 1.0 / ITERATIONS_NUMBER;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
@@ -68,7 +58,9 @@ public final class SecondPartTasks {
                         entry -> entry.getValue().
                                 stream().
                                 mapToInt(String::length).
-                                sum()))).map(Map.Entry::getKey).orElse(null);
+                                sum()))).
+                map(Map.Entry::getKey).
+                orElse(null);
     }
 
     // Вы крупный поставщик продуктов. Каждая торговая сеть делает вам заказ в виде Map<Товар, Количество>.
