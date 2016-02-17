@@ -6,7 +6,7 @@ import java.util.function.Supplier;
  * Created by rebryk on 14/02/16.
  */
 
-public class LazyMultithreading<T> implements Lazy<T>{
+public class LazyMultithreading<T> implements Lazy<T> {
     private volatile Supplier<T> supplier;
     private T data;
 
