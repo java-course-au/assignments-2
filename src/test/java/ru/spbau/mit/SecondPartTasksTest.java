@@ -1,39 +1,22 @@
 package ru.spbau.mit;
 
-import org.junit.Assert;
 import org.junit.Test;
-
-import java.lang.reflect.Array;
-import java.nio.file.Paths;
 import java.util.*;
-
-
-import static org.junit.Assert.fail;
-import org.junit.Test;
-
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import static junitx.framework.Assert.assertEquals;
-
 import static ru.spbau.mit.SecondPartTasks.*;
 
 public class SecondPartTasksTest {
-
     @Test
     public void testFindQuotes() {
         assertEquals(
-                Arrays.asList("input01.txt", "input03.txt"),
-                findQuotes(Arrays.asList("input01.txt", "input02.txt", "input03.txt"), "test"));
+                Arrays.asList("data/input01.txt", "data/input03.txt"),
+                findQuotes(Arrays.asList("data/input01.txt", "data/input02.txt", "data/input03.txt"), "test"));
     }
 
     @Test
     public void testPiDividedBy4() {
-        assertEquals(true, Math.abs(Math.PI / 4.0 - piDividedBy4()) < 1e-2);
+        assertEquals(true, Math.abs(Math.PI / 4.0 - piDividedBy4()) < 1e-3);
     }
 
     @Test

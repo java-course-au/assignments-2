@@ -1,6 +1,9 @@
 package ru.spbau.mit;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,20 +31,22 @@ public final class FirstPartTasks {
     public static List<String> allTracksSorted(Stream<Album> albums) {
         return albums
                 .flatMap(album -> album.getTracks()
-                .stream()
-                .map(track -> track.getName()))
+                        .stream()
+                        .map(track -> track.getName()))
                 .sorted()
                 .collect(Collectors.toList());
     }
 
     // Список альбомов, в которых есть хотя бы один
     // трек с рейтингом более 95, отсортированный по названию
+    public static final int HIGH_RATING = 95;
+
     public static List<Album> sortedFavorites(Stream<Album> s) {
         return s
                 .filter(album -> album
                         .getTracks()
                         .stream()
-                        .anyMatch(track -> track.getRating() > 95))
+                        .anyMatch(track -> track.getRating() > HIGH_RATING))
                 .sorted((a, b) -> a.getName().compareTo(b.getName()))
                 .collect(Collectors.toList());
     }

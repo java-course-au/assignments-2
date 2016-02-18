@@ -2,10 +2,15 @@ package ru.spbau.mit;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class SecondPartTasks {
+    private static final double RADIUS = 0.5;
+    private static final int ITERATIONS_COUNT = 10_000_000;
 
     private SecondPartTasks() { }
 
@@ -35,15 +40,13 @@ public final class SecondPartTasks {
     // java.util.Random и посчитать, какова вероятность
     // попасть в мишень.
     public static double piDividedBy4() {
-        return new Random()
-                .doubles(10000)
-                .mapToObj(v1 -> Arrays.asList(v1, new Random().nextDouble()))
-                .mapToInt(p ->
-                        (p.get(0) - 0.5) * (p.get(0) - 0.5)
-                         + (p.get(1) - 0.5) * (p.get(1) - 0.5)
-                         <= 0.25 ? 1 : 0)
-                .average()
-                .orElse(0);
+        return Stream
+                .generate(() -> Math.pow(
+                        new Random().nextDouble() - RADIUS, 2.0)
+                        + Math.pow(new Random().nextDouble() - RADIUS, 2))
+                .limit(ITERATIONS_COUNT)
+                .filter(x -> x <= Math.pow(RADIUS, 2.0))
+                .count() / (1.0 * ITERATIONS_COUNT);
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
@@ -52,28 +55,22 @@ public final class SecondPartTasks {
         return compositions
                 .entrySet()
                 .stream()
-                .max(
-                    (e1, e2) ->  Integer.compare(
-                            e1.getValue()
-                            .stream()
-                            .mapToInt(String::length).sum(),
-
-                            e2.getValue()
-                            .stream()
-                            .mapToInt(String::length).sum()
-                    )).orElse(null).getKey();
+                .max((e1, e2) ->  Integer.compare(
+                                e1.getValue().stream().mapToInt(String::length).sum(),
+                                e2.getValue().stream().mapToInt(String::length).sum()
+                        ))
+                .orElse(null)
+                .getKey();
     }
 
     // Вы крупный поставщик продуктов.
     // Каждая торговая сеть делает вам заказ в виде Map<Товар, Количество>.
     // Необходимо вычислить, какой товар и в каком количестве надо поставить.
     public static Map<String, Integer> calculateGlobalOrder(List<Map<String,
-                                                            Integer>> orders) {
+            Integer>> orders) {
         return orders
                 .stream()
-                .flatMap(map -> map.entrySet()
-                        .stream())
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                Map.Entry::getValue, (a, b) -> a + b));
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a + b));
     }
 }
