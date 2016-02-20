@@ -4,6 +4,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
 public final class LazyFactory {
+    private LazyFactory() {
+    }
+
     private static class OneThreadLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
         private Supplier<T> supplier;
