@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,148 +11,155 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 public class LazyFactoryTest {
-    private static int counter = 0;
-    private Supplier<Integer> simpleSupplier = new Supplier<Integer>() {
+    private static class SupplierCounter implements Supplier<Integer> {
+        private Integer cnt = 0;
+
         @Override
-        public synchronized Integer get() {
-            counter++;
-            return counter;
+        public Integer get() {
+            Thread.yield();
+            cnt++;
+            return cnt;
         }
-    };
-    private Supplier<String> supplierReturnsNull = new Supplier<String>() {
+
+        public Integer getCnt() {
+            return cnt;
+        }
+    }
+
+    private static class SupplierCounterReturnsNull implements Supplier<Integer> {
+        private Integer cnt = 0;
+
         @Override
-        public String get() {
+        public Integer get() {
+            Thread.yield();
+            cnt++;
             return null;
         }
-    };
-    private Supplier<Integer> concurrentSupplier = new Supplier<Integer>() {
-        @Override
-        public synchronized Integer get() {
-            Thread.yield();
-            counter++;
-            return counter;
-        }
-    };
-    private Supplier<Integer> supplierForMultiThread = new Supplier<Integer>() {
-        private boolean wasCalled = false;
 
-        @Override
-        public synchronized Integer get() {
-            if (wasCalled) {
-                fail("Supplier was called more then one time");
-            }
-            Thread.yield();
-            wasCalled = true;
-            counter++;
-            return counter;
+        public Integer getCnt() {
+            return cnt;
         }
-    };
+    }
 
-    private List<Future<Integer>> createTasks(final Lazy<Integer> lazy) {
-        List<Future<Integer>> list = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(20);
+    private void checkOneThread(LazyFactoryFromSupplier factory) {
+        SupplierCounter supplier = new SupplierCounter();
+        Lazy<Integer> lazy = factory.createLazy(supplier);
+        assertEquals(Integer.valueOf(0), supplier.getCnt());
+        Integer result = lazy.get();
+        assertEquals(Integer.valueOf(1), supplier.getCnt());
+        assertEquals(Integer.valueOf(1), result);
         for (int i = 0; i < 100; i++) {
-            list.add(executorService.submit(new Callable<Integer>() {
-                                                private Integer result;
-                                                private boolean calculated = false;
-
-                                                @Override
-                                                public Integer call() throws Exception {
-                                                    for (int i = 0; i < 20; i++) {
-                                                        Integer newResult = lazy.get();
-                                                        if (!calculated) {
-                                                            calculated = true;
-                                                            result = newResult;
-                                                        }
-                                                        assertTrue(result == newResult);
-                                                    }
-                                                    return result;
-                                                }
-                                            }
-            ));
+            assertTrue(result == lazy.get());
+            assertEquals(Integer.valueOf(1), supplier.getCnt());
         }
-
-        return list;
     }
 
-    @Test
-    public void testCreateLazyOneThread_simpleSupplier() {
-        Lazy<Integer> lazy = LazyFactory.createLazyOneThread(simpleSupplier);
-        counter = 0;
+    private void checkOneThread_returnsNull(LazyFactoryFromSupplier factory) {
+        SupplierCounterReturnsNull supplierReturnsNull = new SupplierCounterReturnsNull();
+        Lazy<Integer> lazy = factory.createLazy(supplierReturnsNull);
+        assertEquals(Integer.valueOf(0), supplierReturnsNull.getCnt());
         Integer result = lazy.get();
-        assertEquals(Integer.valueOf(1), result);
-        assertTrue(result == lazy.get());
+        assertEquals(Integer.valueOf(1), supplierReturnsNull.getCnt());
+        assertEquals(null, result);
+        for (int i = 0; i < 100; i++) {
+            assertTrue(null == lazy.get());
+            assertEquals(Integer.valueOf(1), supplierReturnsNull.getCnt());
+        }
+    }
+
+    private void checkMultiThread(LazyFactoryFromSupplier factory, boolean callSupplierOnlyOnce) {
+        SupplierCounter supplier = new SupplierCounter();
+        Lazy<Integer> lazy = factory.createLazy(supplier);
+        List<Future<Integer>> list = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+        for (int i = 0; i < 50; i++) {
+            list.add(executor.submit(() -> {
+                Thread.yield();
+                return lazy.get();
+            }));
+        }
+        try {
+            Integer result = list.get(0).get();
+            assertEquals(Integer.valueOf(1), result);
+            for (int i = 1; i < 50; i++) {
+                assertTrue(result == list.get(i).get());
+            }
+        } catch (Exception ignored) {
+        }
+        if (callSupplierOnlyOnce) {
+            assertEquals(Integer.valueOf(1), supplier.getCnt());
+        }
+    }
+
+    private void checkMultiThread_returnsNull(LazyFactoryFromSupplier factory, boolean callSupplierOnlyOnce) {
+        SupplierCounterReturnsNull supplier = new SupplierCounterReturnsNull();
+        Lazy<Integer> lazy = factory.createLazy(supplier);
+        List<Future<Integer>> list = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+        for (int i = 0; i < 50; i++) {
+            list.add(executor.submit(() -> {
+                Thread.yield();
+                return lazy.get();
+            }));
+        }
+        try {
+            for (Future<Integer> future : list) {
+                assertTrue(null == future.get());
+            }
+        } catch (Exception ignored) {
+        }
+        if (callSupplierOnlyOnce) {
+            assertEquals(Integer.valueOf(1), supplier.getCnt());
+        }
     }
 
     @Test
-    public void testCreateLazyOneThread_returnNull() {
-        Lazy<String> lazy = LazyFactory.createLazyOneThread(supplierReturnsNull);
-        String result = lazy.get();
-        assertTrue(result == null);
-        assertTrue(lazy.get() == null);
+    public void testCreateLazyOneThread_supplierCounter() {
+        checkOneThread(LazyFactory::createLazyOneThread);
     }
 
     @Test
-    public void testCreateLazyMultiThread_simpleSupplier() {
-        Lazy<Integer> lazy = LazyFactory.createLazyMultiThread(simpleSupplier);
-        counter = 0;
-        Integer result = lazy.get();
-        assertEquals(Integer.valueOf(1), result);
-        assertTrue(result == lazy.get());
+    public void testCreateLazyOneThread_supplierReturnsNull() {
+        checkOneThread_returnsNull(LazyFactory::createLazyOneThread);
     }
 
     @Test
-    public void testCreateLazyMultiThread_returnNull() {
-        Lazy<String> lazy = LazyFactory.createLazyMultiThread(supplierReturnsNull);
-        String result = lazy.get();
-        assertTrue(result == null);
-        assertTrue(lazy.get() == null);
+    public void testCreateLazyMultiThread_supplierCounter() {
+        checkOneThread(LazyFactory::createLazyMultiThread);
     }
 
     @Test
-    public void testCreateLazyLockFree_simpleSupplier() {
-        Lazy<Integer> lazy = LazyFactory.createLazyLockFree(simpleSupplier);
-        counter = 0;
-        Integer result = lazy.get();
-        assertEquals(Integer.valueOf(1), result);
-        assertTrue(result == lazy.get());
+    public void testCreateLazyMultiThread_supplierReturnsNull() {
+        checkOneThread_returnsNull(LazyFactory::createLazyMultiThread);
     }
 
     @Test
-    public void testCreateLazyLockFree_returnNull() {
-        Lazy<String> lazy = LazyFactory.createLazyLockFree(supplierReturnsNull);
-        String result = lazy.get();
-        assertTrue(result == null);
-        assertTrue(lazy.get() == null);
+    public void testCreateLazyLockFree_supplierCounter() {
+        checkOneThread(LazyFactory::createLazyLockFree);
+    }
+
+    @Test
+    public void testCreateLazyLockFree_supplierReturnsNull() {
+        checkOneThread_returnsNull(LazyFactory::createLazyLockFree);
     }
 
     @Test
     public void testCreateLazyMultiThread_concurrency() {
-        final Lazy<Integer> lazy = LazyFactory.createLazyMultiThread(supplierForMultiThread);
-        List<Future<Integer>> list = createTasks(lazy);
-        try {
-            Integer result = list.get(0).get();
-            for (int i = 0; i < 100; i++) {
-                assertTrue(result == list.get(i).get());
-            }
-        } catch (ExecutionException e) {
-            fail(e.getMessage());
-        } catch (InterruptedException ignored) {
-        }
+        checkMultiThread(LazyFactory::createLazyMultiThread, true);
     }
 
     @Test
     public void testCreateLazyLockFree_concurrency() {
-        final Lazy<Integer> lazy = LazyFactory.createLazyLockFree(concurrentSupplier);
-        List<Future<Integer>> list = createTasks(lazy);
-        try {
-            Integer result = list.get(0).get();
-            for (int i = 0; i < 100; i++) {
-                assertTrue(result == list.get(i).get());
-            }
-        } catch (ExecutionException e) {
-            fail(e.getMessage());
-        } catch (InterruptedException ignored) {
-        }
+        checkMultiThread(LazyFactory::createLazyLockFree, false);
+    }
+
+    @Test
+    public void testCreateLazyMultiThread_concurrencyReturnsNull() {
+        checkMultiThread_returnsNull(LazyFactory::createLazyMultiThread, true);
+    }
+
+    @Test
+    public void testCreateLazyLockFree_concurrencyReturnsNull() {
+        checkMultiThread_returnsNull(LazyFactory::createLazyLockFree, false);
     }
 }
