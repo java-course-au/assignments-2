@@ -98,17 +98,17 @@ public final class FirstPartTasks {
     // Произведение всех чисел потока по модулю 'modulo'
     // (все числа от 0 до 10000)
     public static int moduloProduction(IntStream stream, int modulo) {
-        return stream.collect(Collectors.reducing((a, b) -> ((a % modulo) * (b % modulo)) % modulo));
+        return stream.reduce(1, (a, b) -> ((a % modulo) * (b % modulo)) % modulo);
     }
 
     // Вернуть строку, состояющую из конкатенаций переданного массива, и окруженную строками "<", ">"
     // см. тесты
     public static String joinTo(String... strings) {
-        throw new UnsupportedOperationException();
+        return Arrays.asList(strings).stream().collect(Collectors.joining(", ", "<", ">"));
     }
 
     // Вернуть поток из объектов класса 'clazz'
     public static <R> Stream<R> filterIsInstance(Stream<?> s, Class<R> clazz) {
-        throw new UnsupportedOperationException();
+        return s.filter(clazz::isInstance).map(a -> (R)a);
     }
 }
