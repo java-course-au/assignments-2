@@ -1,4 +1,4 @@
-/**
+package ru.spbau.mit; /**
  * Created by n_buga on 15.02.16.
  */
 
@@ -13,7 +13,6 @@ public class LazyFactoryTest {
 
     @Test
     public void simpleTest() {
-
         final Random random = new Random();
         Lazy<Integer>[] listLazy = new Lazy[4];
         Supplier<Integer> supplier = new Supplier<Integer>() {
@@ -36,7 +35,6 @@ public class LazyFactoryTest {
 
     @Test
     public void threadsTest() {
-
         final Random random = new Random();
         Supplier<Integer> supplier = new Supplier<Integer>() {
             @Override
@@ -76,7 +74,6 @@ public class LazyFactoryTest {
 
     @Test
     public void lockFreeTest() {
-
         final Random random = new Random();
         Supplier<Integer> supplier = new Supplier<Integer>() {
             @Override
