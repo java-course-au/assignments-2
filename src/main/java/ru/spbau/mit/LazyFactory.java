@@ -3,7 +3,7 @@ package ru.spbau.mit;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
-public class LazyFactory {
+public final class LazyFactory {
     private static class OneThreadLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
         private Supplier<T> supplier;
@@ -49,8 +49,8 @@ public class LazyFactory {
     private static class LockFreeLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
         private Supplier<T> supplier;
-        private final static
-        AtomicReferenceFieldUpdater<LockFreeLazy, Object> updater =
+        private static final
+        AtomicReferenceFieldUpdater<LockFreeLazy, Object> UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(
                         LockFreeLazy.class, Object.class, "result");
         private volatile Object result = NONE;
@@ -64,7 +64,7 @@ public class LazyFactory {
             if (result == NONE) {
                 Supplier<T> local = supplier;
                 if (local != null) {
-                    if (updater.compareAndSet(this, NONE, local.get())) {
+                    if (UPDATER.compareAndSet(this, NONE, local.get())) {
                         supplier = null;
                     }
                 }
