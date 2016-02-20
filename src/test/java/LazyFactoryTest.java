@@ -10,13 +10,15 @@ import static junit.framework.Assert.assertTrue;
 
 public class LazyFactoryTest {
 
-    class MultipleExecutionsException extends RuntimeException {}
+    class MultipleExecutionsException extends RuntimeException {
+    }
 
     class SupplierFunctions {
 
         public Boolean executed = false;
+
         public Object doCheckMultipleExecutions() {
-            if(executed) {
+            if (executed) {
                 throw new MultipleExecutionsException();
             }
             executed = true;
@@ -29,7 +31,7 @@ public class LazyFactoryTest {
 
         public Object doCheckRandObjects() {
             Random gen = new Random();
-            if(gen.nextInt() % 2 == 1) {
+            if (gen.nextInt() % 2 == 1) {
                 return new Object();
             }
             return null;
@@ -37,7 +39,7 @@ public class LazyFactoryTest {
     }
 
 
-// the two following functions accept a factory, which producec Lazy's,
+    // the two following functions accept a factory, which producec Lazy's,
 // and a function, on which this Lazy will be tested
     private <T> void doTestOneThread(final Function<Supplier<T>, Lazy<T>> createLazy,
                                      final Callable<T> supplierFunction, int cnt) {
@@ -53,7 +55,7 @@ public class LazyFactoryTest {
         });
         T result = lazy.get();
 
-        for(int i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             assertTrue(result == lazy.get());
         }
     }
@@ -89,21 +91,21 @@ public class LazyFactoryTest {
         ArrayList<Thread> lazyExecutors = new ArrayList<>();
         ArrayList<MyRunnable> myRunnables = new ArrayList<>();
 
-        for(int i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             myRunnables.add(new MyRunnable());
             Thread lazyExecutor = new Thread(myRunnables.get(i));
             lazyExecutors.add(lazyExecutor);
             lazyExecutor.start();
         }
-        for(int i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             lazyExecutors.get(i).join();
-            if(myRunnables.get(i).exception != null) {
+            if (myRunnables.get(i).exception != null) {
                 throw myRunnables.get(i).exception;
             }
         }
     }
 
-// does test one-threaded Lazy
+    // does test one-threaded Lazy
     @Test
     public void testCreateLazyOneThread() throws Exception {
         doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckRandObjects, 10);
@@ -114,7 +116,7 @@ public class LazyFactoryTest {
         doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckReturnNull, 10);
     }
 
-// does test multithreaded Lazy
+    // does test multithreaded Lazy
     @Test
     public void testCreateLazyMultithreadMultipleExecution() throws InterruptedException {
         doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutions, 10);
@@ -130,7 +132,7 @@ public class LazyFactoryTest {
         doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckReturnNull, 10);
     }
 
-// does test lockfree Lazy
+    // does test lockfree Lazy
     @Test
     public void testCreateLazyLockfreeMultipleExecution() throws InterruptedException {
         doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutions, 10);

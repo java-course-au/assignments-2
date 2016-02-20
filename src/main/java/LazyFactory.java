@@ -1,8 +1,9 @@
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
-public class LazyFactory {
+public final class LazyFactory {
+
+    private LazyFactory() {}
 
     public static final Object NONE = new Object();
 
@@ -12,12 +13,12 @@ public class LazyFactory {
 
         public LazyOneThread(Supplier<T> s) {
             supplier = s;
-            result = (T)NONE;
+            result = (T) NONE;
         }
 
         @Override
         public T get() {
-            if(result == NONE) {
+            if (result == NONE) {
                 result = supplier.get();
                 supplier = null;
             }
@@ -35,21 +36,21 @@ public class LazyFactory {
         private volatile T result;
         private Supplier<T> supplier;
 
-        public LazyMultithread (Supplier<T> s) {
+        public LazyMultithread(Supplier<T> s) {
             supplier = s;
-            result = (T)NONE;
+            result = (T) NONE;
         }
 
         @Override
         public T get() {
-            if(result == NONE) {
-                    synchronized (this) {
-                        if(result == NONE) {
-                            result = supplier.get();
-                            supplier = null;
-                        }
+            if (result == NONE) {
+                synchronized (this) {
+                    if (result == NONE) {
+                        result = supplier.get();
+                        supplier = null;
                     }
                 }
+            }
             return result;
         }
     }
@@ -60,22 +61,22 @@ public class LazyFactory {
 
     public static class LazyLockfree<T> implements Lazy<T> {
 
-        private static final AtomicReferenceFieldUpdater<LazyLockfree, Object> updater =
+        private static final AtomicReferenceFieldUpdater<LazyLockfree, Object> UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(LazyLockfree.class, Object.class, "result");
         private volatile T result;
         private Supplier<T> supplier;
 
         public LazyLockfree(Supplier<T> s) {
             supplier = s;
-            result = (T)NONE;
+            result = (T) NONE;
         }
 
         @Override
         public T get() {
-            if(result == NONE) {
+            if (result == NONE) {
                 Supplier<T> local = supplier;
-                if(local != null) {
-                    if(updater.compareAndSet(this, NONE, local.get())) {
+                if (local != null) {
+                    if (UPDATER.compareAndSet(this, NONE, local.get())) {
                         supplier = null;
                     }
                 }
