@@ -1,3 +1,5 @@
+package ru.spbau.mit;
+
 /**
  * Created by n_buga on 14.02.16.
  */

@@ -3,6 +3,8 @@
  */
 
 import org.junit.Test;
+import ru.spbau.mit.Lazy;
+import ru.spbau.mit.LazyFactory;
 
 import java.util.Random;
 import java.util.function.Supplier;

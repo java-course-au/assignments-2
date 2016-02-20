@@ -1,6 +1,8 @@
-import javafx.util.Pair;
+package ru.spbau.mit;
 
-import java.util.Objects;
+import javafx.util.Pair;
+import ru.spbau.mit.Lazy;
+
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
