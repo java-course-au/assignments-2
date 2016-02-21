@@ -26,10 +26,13 @@ public final class SecondPartTasks {
 
     // В квадрат с длиной стороны 1 вписана мишень.
     // Стрелок атакует мишень и каждый раз попадает в произвольную точку квадрата.
-    // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать, какова вероятность попасть в мишень.
+    // Надо промоделировать этот процесс с помощью класса
+    // java.util.Random и посчитать, какова вероятность попасть в мишень.
+
+    private static final int COUNT_REP = 1000000;
     public static double piDividedBy4() {
-        return new Random().doubles(1000000).boxed().map(new Function<Double, ArrayList<Double>>() {
-            Double firstArg;
+        return new Random().doubles(COUNT_REP).boxed().map(new Function<Double, ArrayList<Double>>() {
+            private Double firstArg;
 
             @Override
             public ArrayList<Double> apply(Double aDouble) {
@@ -44,7 +47,8 @@ public final class SecondPartTasks {
                     return null;
                 }
             }
-        }).filter(a -> a != null).filter(a -> a.get(0) * a.get(0) + a.get(1) * a.get(1) <= 1).count() / 500000.0;
+        }).filter(a -> a != null)
+                .filter(a -> a.get(0) * a.get(0) + a.get(1) * a.get(1) <= 1).count() * 2.0 / COUNT_REP;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.

@@ -21,16 +21,20 @@ public final class FirstPartTasks {
 
     // Список треков, отсортированный лексикографически по названию, включающий все треки альбомов из 'albums'
     public static List<String> allTracksSorted(Stream<Album> albums) {
-        return albums.flatMap(a -> a.getTracks().stream()).map(a -> a.getName()).sorted().collect(Collectors.toList());
+        return albums.flatMap(a -> a.getTracks().stream()).map(a -> a.getName())
+                .sorted().collect(Collectors.toList());
     }
 
     // Список альбомов, в которых есть хотя бы один трек с рейтингом более 95, отсортированный по названию
+
+    private static final int GOOD_RATING = 95;
     public static List<Album> sortedFavorites(Stream<Album> s) {
         return s.filter(a -> {
-            if (a.getTracks().isEmpty()) return false;
-            else {
+            if (a.getTracks().isEmpty()) {
+                return false;
+            } else {
                 return a.getTracks()
-                        .stream().map(t -> t.getRating()).max(Integer::compareTo).get() > 95;
+                        .stream().map(t -> t.getRating()).max(Integer::compareTo).get() > GOOD_RATING;
             }
         }).sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
     }
@@ -68,17 +72,23 @@ public final class FirstPartTasks {
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
         return albums.min((a, b) -> {
             int val1, val2;
-            if (a.getTracks().isEmpty()) val1 = 0;
-            else
+            if (a.getTracks().isEmpty()) {
+                val1 = 0;
+            } else {
                 val1 = a.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
-
-            if (b.getTracks().isEmpty()) val2 = 0;
-            else
+            }
+            if (b.getTracks().isEmpty()) {
+                val2 = 0;
+            } else {
                 val2 = b.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
-
-            if (val1 < val2) return -1;
-            else if (val1 == val2) return 0;
-            else return 1;
+            }
+            if (val1 < val2) {
+                return -1;
+            } else if (val1 == val2) {
+                return 0;
+            } else {
+                return 1;
+            }
         });
     }
 
@@ -89,11 +99,19 @@ public final class FirstPartTasks {
                     int sum1 = a.getTracks().stream().map(t -> t.getRating()).reduce(0, (u, v) -> u + v),
                             sum2 = b.getTracks().stream().map(t -> t.getRating()).reduce(0, (u, v) -> u + v),
                             cnt1 = a.getTracks().size(), cnt2 = b.getTracks().size();
-                    if (cnt1 == 0) ++cnt1;
-                    if (cnt2 == 0) ++cnt2;
-                    if (sum1 * cnt2 < sum2 * cnt1) return 1;
-                    else if (sum1 * cnt2 == sum2 * cnt1) return 0;
-                    else return -1;
+                    if (cnt1 == 0) {
+                        ++cnt1;
+                    }
+                    if (cnt2 == 0) {
+                        ++cnt2;
+                    }
+                    if (sum1 * cnt2 < sum2 * cnt1) {
+                        return 1;
+                    } else if (sum1 * cnt2 == sum2 * cnt1) {
+                        return 0;
+                    } else {
+                        return -1;
+                    }
                 }
         ).collect(Collectors.toList());
     }
