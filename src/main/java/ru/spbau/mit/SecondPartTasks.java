@@ -33,11 +33,12 @@ public final class SecondPartTasks {
 
     // В квадрат с длиной стороны 1 вписана мишень.
     // Стрелок атакует мишень и каждый раз попадает в произвольную точку квадрата.
-    // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать, какова вероятность попасть в мишень.
+    // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
+    // какова вероятность попасть в мишень.
     public static double piDividedBy4() {
         return DoubleStream.generate(() -> {
-            if (Math.pow(RANDOM.nextDouble() - RADIUS, 2) +
-                    Math.pow(RANDOM.nextDouble() - RADIUS, 2) < Math.pow(RADIUS, 2)) {
+            if (Math.pow(RANDOM.nextDouble() - RADIUS, 2)
+                    + Math.pow(RANDOM.nextDouble() - RADIUS, 2) < Math.pow(RADIUS, 2)) {
                 return 1;
             } else {
                 return 0;
