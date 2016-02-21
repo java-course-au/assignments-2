@@ -6,7 +6,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class FirstPartTasks {
-    private FirstPartTasks() {}
+    private FirstPartTasks() {
+    }
+
     // Список названий альбомов
     public static List<String> allNames(Stream<Album> albums) {
         return albums.map(a -> a.getName()).collect(Collectors.toList());
@@ -30,7 +32,7 @@ public final class FirstPartTasks {
                 return a.getTracks()
                         .stream().map(t -> t.getRating()).max(Integer::compareTo).get() > 95;
             }
-        }).sorted((a, b)-> a.getName().compareTo(b.getName())).collect(Collectors.toList());
+        }).sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
     }
 
     // Сгруппировать альбомы по артистам
@@ -57,22 +59,22 @@ public final class FirstPartTasks {
         return albums.collect(
                 Collectors.groupingBy(
                         a -> a,
-                        Collectors.counting() ))
-                .entrySet().stream().filter( a -> a.getValue() > 1).count();
+                        Collectors.counting()))
+                .entrySet().stream().filter(a -> a.getValue() > 1).count();
     }
 
     // Альбом в котором максимум рейтинга минимален
     // (если в альбоме нет ни одного трека, считать, что максимум рейтинга в нем --- 0)
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
         return albums.min((a, b) -> {
-                                int val1, val2;
-                                if (a.getTracks().isEmpty()) val1 = 0;
-                                else
-                                    val1 = a.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
+            int val1, val2;
+            if (a.getTracks().isEmpty()) val1 = 0;
+            else
+                val1 = a.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
 
-                                if (b.getTracks().isEmpty()) val2 = 0;
-                                else
-                                    val2 = b.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
+            if (b.getTracks().isEmpty()) val2 = 0;
+            else
+                val2 = b.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
 
             if (val1 < val2) return -1;
             else if (val1 == val2) return 0;
@@ -89,8 +91,8 @@ public final class FirstPartTasks {
                             cnt1 = a.getTracks().size(), cnt2 = b.getTracks().size();
                     if (cnt1 == 0) ++cnt1;
                     if (cnt2 == 0) ++cnt2;
-                    if (sum1*cnt2 < sum2*cnt1) return 1;
-                    else if (sum1*cnt2 == sum2*cnt1) return 0;
+                    if (sum1 * cnt2 < sum2 * cnt1) return 1;
+                    else if (sum1 * cnt2 == sum2 * cnt1) return 0;
                     else return -1;
                 }
         ).collect(Collectors.toList());
@@ -99,7 +101,7 @@ public final class FirstPartTasks {
     // Произведение всех чисел потока по модулю 'modulo'
     // (все числа от 0 до 10000)
     public static int moduloProduction(IntStream stream, int modulo) {
-        return stream.reduce(1, (a, b) -> (a * b)%modulo);
+        return stream.reduce(1, (a, b) -> (a * b) % modulo);
     }
 
     // Вернуть строку, состояющую из конкатенаций переданного массива, и окруженную строками "<", ">"

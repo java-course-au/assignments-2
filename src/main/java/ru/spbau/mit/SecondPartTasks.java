@@ -9,7 +9,8 @@ import java.util.stream.Collectors;
 
 public final class SecondPartTasks {
 
-    private SecondPartTasks() {}
+    private SecondPartTasks() {
+    }
 
     // Найти строки из переданных файлов, в которых встречается указанная подстрока.
     public static List<String> findQuotes(List<String> paths, CharSequence sequence) {
@@ -29,18 +30,21 @@ public final class SecondPartTasks {
     public static double piDividedBy4() {
         return new Random().doubles(1000000).boxed().map(new Function<Double, ArrayList<Double>>() {
             Double firstArg;
+
             @Override
             public ArrayList<Double> apply(Double aDouble) {
                 if (firstArg != null) {
-                    Double help = firstArg;
+                    ArrayList<Double> ar = new ArrayList<Double>();
+                    ar.add(firstArg);
+                    ar.add(aDouble);
                     firstArg = null;
-                    return ((ArrayList<Double>) Arrays.asList(help, aDouble));
+                    return ar;
                 } else {
                     firstArg = aDouble;
                     return null;
                 }
             }
-        }).filter(a -> a != null).filter(a -> a.get(0) * a.get(0) + a.get(1) * a.get(1) <= 1).count()/500000.0;
+        }).filter(a -> a != null).filter(a -> a.get(0) * a.get(0) + a.get(1) * a.get(1) <= 1).count() / 500000.0;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
@@ -62,7 +66,7 @@ public final class SecondPartTasks {
                         a -> a.getKey(),
                         Collectors.mapping(
                                 a -> a.getValue(),
-                                Collectors.reducing(0, (c,d) -> c + d)
+                                Collectors.reducing(0, (c, d) -> c + d)
                         )
                 )
         );
