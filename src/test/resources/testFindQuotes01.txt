@@ -1,0 +1,6 @@
+a
+bacaba
+aabacaba
+abacabaabacabaabacaba abacabaabacabaabacaba
+zzzabacabazzza
+bacaba
