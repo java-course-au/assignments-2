@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 public final class SecondPartTasks {
 
     private static final Random RANDOM = new Random();
+    private static final int ITERATIONS = 10000000;
+    private static final double RADIUS = 0.5;
 
     private SecondPartTasks() {
     }
@@ -34,12 +36,13 @@ public final class SecondPartTasks {
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать, какова вероятность попасть в мишень.
     public static double piDividedBy4() {
         return DoubleStream.generate(() -> {
-            if (Math.pow(RANDOM.nextDouble() - 0.5, 2) + Math.pow(RANDOM.nextDouble() - 0.5, 2) < 0.25) {
+            if (Math.pow(RANDOM.nextDouble() - RADIUS, 2) +
+                    Math.pow(RANDOM.nextDouble() - RADIUS, 2) < Math.pow(RADIUS, 2)) {
                 return 1;
             } else {
                 return 0;
             }
-        }).limit(10000000).average().getAsDouble();
+        }).limit(ITERATIONS).average().getAsDouble();
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.

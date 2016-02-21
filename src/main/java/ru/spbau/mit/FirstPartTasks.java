@@ -7,6 +7,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class FirstPartTasks {
+    private static final int MIN_RATING = 95;
+
     private FirstPartTasks() {
     }
 
@@ -22,12 +24,14 @@ public final class FirstPartTasks {
 
     // Список треков, отсортированный лексикографически по названию, включающий все треки альбомов из 'albums'
     public static List<String> allTracksSorted(Stream<Album> albums) {
-        return albums.flatMap((x) -> x.getTracks().stream().map(Track::getName)).sorted().collect(Collectors.toList());
+        return albums.flatMap((x) -> x.getTracks().stream().map(Track::getName)).sorted()
+                .collect(Collectors.toList());
     }
 
     // Список альбомов, в которых есть хотя бы один трек с рейтингом более 95, отсортированный по названию
     public static List<Album> sortedFavorites(Stream<Album> s) {
-        return s.filter((x) -> x.getTracks().stream().map(Track::getRating).max((a, b) -> a - b).orElse(0) > 95)
+        return s.filter((x) -> x.getTracks().stream().
+                map(Track::getRating).max((a, b) -> a - b).orElse(0) > MIN_RATING)
                 .sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
     }
 
@@ -38,7 +42,8 @@ public final class FirstPartTasks {
 
     // Сгруппировать альбомы по артистам (в качестве значения вместо объекта 'Artist' использовать его имя)
     public static Map<Artist, List<String>> groupByArtistMapName(Stream<Album> albums) {
-        return albums.collect(Collectors.groupingBy(Album::getArtist, Collectors.mapping(Album::getName, Collectors.toList())));
+        return albums.collect(Collectors.groupingBy(Album::getArtist,
+                Collectors.mapping(Album::getName, Collectors.toList())));
     }
 
     // Число повторяющихся альбомов в потоке
@@ -50,7 +55,8 @@ public final class FirstPartTasks {
     // Альбом в котором максимум рейтинга минимален
     // (если в альбоме нет ни одного трека, считать, что максимум рейтинга в нем --- 0)
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
-        return albums.min(Comparator.comparing((a) -> a.getTracks().stream().mapToInt(Track::getRating).max().orElse(0)));
+        return albums.min(Comparator.comparing((a) -> a.getTracks().stream()
+                .mapToInt(Track::getRating).max().orElse(0)));
     }
 
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)

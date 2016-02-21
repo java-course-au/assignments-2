@@ -15,7 +15,8 @@ public class SecondPartTasksTest {
         List<String> expected = Arrays.asList("abacaba", "abacabadabacaba aaaaaaa", "aabababacaba",
                 "aabacaba", "abacabaabacabaabacaba abacabaabacabaabacaba", "zzzabacabazzza");
         Collections.sort(expected);
-        List<String> actual = SecondPartTasks.findQuotes(Arrays.asList("src/test/resources/testFindQuotes00.txt", "src/test/resources/testFindQuotes01.txt"), "abacaba");
+        List<String> actual = SecondPartTasks.findQuotes(Arrays.asList("src/test/resources/testFindQuotes00.txt",
+                "src/test/resources/testFindQuotes01.txt"), "abacaba");
         Collections.sort(actual);
         assertEquals(expected, actual);
     }
