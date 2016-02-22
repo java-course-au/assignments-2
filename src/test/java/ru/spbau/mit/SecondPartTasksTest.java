@@ -59,7 +59,7 @@ public class SecondPartTasksTest {
 
     @Test
     public void testCalculateGlobalOrder() {
-        Map<String, Integer> order0 = new HashMap<>();
+        final Map<String, Integer> order0 = new HashMap<>();
         order0.put("Cabernet", 35);
         order0.put("Jamon", 10);
         order0.put("Ham", 100);

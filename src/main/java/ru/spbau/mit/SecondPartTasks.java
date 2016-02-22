@@ -31,9 +31,9 @@ public final class SecondPartTasks {
     // Стрелок атакует мишень и каждый раз попадает в произвольную точку квадрата.
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
     // какова вероятность попасть в мишень.
-    final static double RAD = 0.5;
-    final static double RAD2 = 0.25;
-    final static long SHOTS_NUMBER = 1_000_000;
+    private static final double RAD = 0.5;
+    private static final double RAD2 = 0.25;
+    private static final long SHOTS_NUMBER = 1_000_000;
     public static double piDividedBy4() {
         Random random = new Random();
 
