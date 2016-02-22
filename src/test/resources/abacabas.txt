@@ -1,0 +1,8 @@
+abacaba
+Not a string from ABBA's 'money' song
+abacabadabacaba
+abacab???bacaba
+acacaba //there is a small typo in 'abacaba' word
+
+previous line was an empty line
+ abacaba 
