@@ -6,7 +6,9 @@ import java.util.function.Supplier;
  * Created by rebryk on 13/02/16.
  */
 
-public class LazyFactory {
+final class LazyFactory {
+    private LazyFactory() { }
+
     public static <T> Lazy<T> createLazy(final Supplier<T> supplier) {
         return new LazySingleThread<>(supplier);
     }

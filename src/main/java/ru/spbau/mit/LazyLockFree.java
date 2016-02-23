@@ -8,12 +8,11 @@ import java.util.function.Supplier;
  */
 public class LazyLockFree<T> implements Lazy<T> {
     private static final Object NONE = new Object();
+    private static final AtomicReferenceFieldUpdater<LazyLockFree, Object> UPDATER
+            = AtomicReferenceFieldUpdater.newUpdater(LazyLockFree.class, Object.class, "data");
 
     private Supplier<T> supplier;
     private volatile Object data = NONE;
-
-    private static final AtomicReferenceFieldUpdater<LazyLockFree, Object> UPDATER
-            = AtomicReferenceFieldUpdater.newUpdater(LazyLockFree.class, Object.class, "data");
 
     public LazyLockFree(final Supplier<T> supplier) {
         this.supplier = supplier;
