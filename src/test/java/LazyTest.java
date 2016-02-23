@@ -1,84 +1,103 @@
 import org.junit.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * Created by olga on 12.02.16.
  */
 public class LazyTest {
-    private <T> void checkLazy(Supplier<T> mSupplier, final int[] countGet) throws InvocationTargetException, IllegalAccessException {
-        LazyFactory mLazyFactory = new LazyFactory();
-        ArrayList<Lazy<Integer> > lazies = new ArrayList<Lazy<Integer>>();
-        Method[] mt = mLazyFactory.getClass().getDeclaredMethods();
-        for (int i = 0; i < mt.length; ++i) {
-            if (mt[i].getReturnType() == Lazy.class) {
-                lazies.add((Lazy<Integer>) mt[i].invoke(mLazyFactory, mSupplier));
-            }
-        }
-        for (Lazy<Integer> currentLazy : lazies) {
-            assertEquals(0, countGet[0]);
-            assertEquals(currentLazy.get(), currentLazy.get());
-            assertEquals(mSupplier.get(), currentLazy.get());
-            assertEquals(2, countGet[0]);
-            countGet[0] = 0;
-        }
-    }
-
-    @Test
-    public void testNull() throws InvocationTargetException, IllegalAccessException {
+    private void checkNull(Function<Supplier, Lazy> factory) {
         final int[] countGet = {0};
-        Supplier<Integer> mSupplier = new Supplier<Integer>() {
-            public Integer get() {
+        Supplier<String> nullSupplier = new Supplier<String>() {
+            @Override
+            public String get() {
                 ++countGet[0];
                 return null;
             }
         };
-        checkLazy(mSupplier, countGet);
+
+        Lazy lazy = factory.apply(nullSupplier);
+
+        assertEquals(0, countGet[0]);
+        assertSame(lazy.get(), lazy.get());
+        assertEquals(nullSupplier.get(), lazy.get());
+        assertEquals(2, countGet[0]);
     }
 
-    @Test
-    public void test() throws InvocationTargetException, IllegalAccessException {
+    private void checkSameObject(Function<Supplier, Lazy> factory) {
         final int[] countGet = {0};
-        Supplier<Integer> mSupplier = new Supplier<Integer>() {
-            public Integer get() {
+        Supplier<int[]> arraySupplier = new Supplier<int[]>() {
+            @Override
+            public int[] get() {
                 ++countGet[0];
-                return 179179;
+                return new int[]{1, 2, 2};
             }
         };
-        checkLazy(mSupplier, countGet);
+
+        Lazy lazy = factory.apply(arraySupplier);
+
+        assertEquals(0, countGet[0]);
+        assertSame(lazy.get(), lazy.get());
+        assertArrayEquals(arraySupplier.get(), (int[]) lazy.get());
+        assertEquals(2, countGet[0]);
     }
 
-    @Test
-    public void testThread() {
-        final Random random = new Random(42);
+    private void checkOneThreadContract(Function<Supplier, Lazy> factory) {
+        checkNull(factory);
+        checkSameObject(factory);
+    }
 
-        final Supplier<Integer> mSupplier = new Supplier<Integer>() {
-            public Integer get() {
-                return random.nextInt(10000);
+    private void checkMultiThreadContract(Function<Supplier, Lazy> factory, Boolean checkOneCallGet) {
+        final int[] countGet = {0};
+
+        final Supplier<String> mSupplier = new Supplier<String>() {
+            public String get() {
+                ++countGet[0];
+                return "abacaba";
             }
         };
 
-        LazyFactory mLazyFactory = new LazyFactory();
-        final ArrayList<Lazy<Integer> > lazies = new ArrayList<Lazy<Integer>>();
-        lazies.add(mLazyFactory.createMultiThreadLazy(mSupplier));
-        lazies.add(mLazyFactory.createLockFreeLazy(mSupplier));
+        final Lazy lazy = factory.apply(mSupplier);
 
         final ArrayList<Thread> threads = new ArrayList<Thread>();
-        for (int i = 0; i < 10; i++) {
+
+        final String[] result = {null};
+        final int threadsCount = 10;
+        for (int i = 0; i < threadsCount; i++) {
             threads.add(new Thread(new Runnable() {
                 public void run() {
-                    for (int j = 0; j < 2; j++) {
-                        assertEquals(lazies.get(j).get(), lazies.get(j).get());
+                    if (result[0] != null) {
+                        assertSame(result[0], lazy.get());
+                    }
+                    assertSame(lazy.get(), lazy.get());
+                    result[0] = (String) lazy.get();
+                    if (checkOneCallGet) {
+                        assertEquals(countGet[0], 1);
                     }
                 }
             }));
             threads.get(i).start();
         }
+    }
+
+    @Test
+    public void testOneThreadLazy() {
+        checkOneThreadContract(LazyFactory::createOneThreadLazy);
+    }
+
+    @Test
+    public void testMultiThreadLazy() {
+        checkOneThreadContract(LazyFactory::createMultiThreadLazy);
+        checkMultiThreadContract(LazyFactory::createMultiThreadLazy, true);
+    }
+
+    @Test
+    public void testLockFreeLazy() {
+        checkOneThreadContract(LazyFactory::createLockFreeLazy);
+        checkMultiThreadContract(LazyFactory::createLockFreeLazy, false);
     }
 }
