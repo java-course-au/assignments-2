@@ -72,10 +72,10 @@ public final class FirstPartTasks {
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums.sorted(Comparator.comparing(
-                a -> -a.getTracks()
-                       .stream()
-                       .collect(Collectors.averagingInt(Track::getRating))))
-                .collect(Collectors.toList());
+                    a -> -a.getTracks()
+                           .stream()
+                           .collect(Collectors.averagingInt(Track::getRating))))
+                     .collect(Collectors.toList());
     }
 
     // Произведение всех чисел потока по модулю 'modulo'

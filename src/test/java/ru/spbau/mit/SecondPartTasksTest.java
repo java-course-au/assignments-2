@@ -1,5 +1,6 @@
 package ru.spbau.mit;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class SecondPartTasksTest {
     public void testFindQuotes() {
         try {
             Set<String> expected = new TreeSet<>(Files.lines(Paths.get("src/test/resources/testresfile.txt"))
-                                                            .collect(Collectors.toList()));
+                                                      .collect(Collectors.toList()));
             Set<String> result = new TreeSet<>(findQuotes(Arrays.asList("src/test/resources/testfile1.txt",
                                                                         "src/test/resources/testfile2.txt"),
                                                           "they"));
@@ -36,10 +37,11 @@ public class SecondPartTasksTest {
         }
     }
 
+    private static final double EPS = 0.005;
+    private static final double MULTIPLIER = 4.0;
     @Test
     public void testPiDividedBy4() {
-        final double eps = 0.005;
-        assertTrue(Math.abs(piDividedBy4() * 4 - Math.PI) < eps);
+        assertTrue(Math.abs(piDividedBy4() * MULTIPLIER - Math.PI) < EPS);
     }
 
     @Test
@@ -59,36 +61,50 @@ public class SecondPartTasksTest {
 
     @Test
     public void testCalculateGlobalOrder() {
-        final Map<String, Integer> order0 = new HashMap<>();
-        order0.put("Cabernet", 35);
-        order0.put("Jamon", 10);
-        order0.put("Ham", 100);
-
-        Map<String, Integer> order1 = new HashMap<>();
-        order1.put("Cabernet", 115);
-        order1.put("Foie Gras", 24);
-        order1.put("Caviar", 58);
-
-        Map<String, Integer> order2 = new HashMap<>();
-        order2.put("Cabernet", 200);
-        order2.put("Jamon", 15);
-        order2.put("Olives", 400);
-        order2.put("Caviar", 66);
-
-        Map<String, Integer> order3 = new HashMap<>();
-        order3.put("Buckwheat", 1_000_000);
-        order3.put("Sausages", 10_000);
-
-        Map<String, Integer> globalOrder = new HashMap<>();
-        globalOrder.put("Cabernet", 350);
-        globalOrder.put("Foie Gras", 24);
-        globalOrder.put("Jamon", 25);
-        globalOrder.put("Olives", 400);
-        globalOrder.put("Ham", 100);
-        globalOrder.put("Caviar", 124);
-        globalOrder.put("Buckwheat", 1_000_000);
-        globalOrder.put("Sausages", 10_000);
-
-        assertEquals(calculateGlobalOrder(Arrays.asList(order0, order1, order2, order3)), globalOrder);
+        assertEquals(calculateGlobalOrder(Arrays.asList(ORDER_0, ORDER_1, ORDER_2, ORDER_3)), GLOBAL_ORDER);
     }
+
+    private static final Map<String, Integer> ORDER_0 = ImmutableMap.of(
+            "Cabernet", 35,
+            "Jamon", 10,
+            "Ham", 100
+    );
+
+    private static final Map<String, Integer> ORDER_1 = ImmutableMap.of(
+            "Cabernet", 115,
+            "Foie Gras", 24,
+            "Caviar", 58
+    );
+
+    private static final Map<String, Integer> ORDER_2 = ImmutableMap.of(
+            "Cabernet", 200,
+            "Jamon", 15,
+            "Olives", 400,
+            "Caviar", 66
+    );
+
+    private static final Map<String, Integer> ORDER_3 = ImmutableMap.of(
+            "Buckwheat", 1_000_000,
+            "Sausages", 10_000
+    );
+
+    private static final int TOTAL_CABERNET = 350;
+    private static final int TOTAL_FOIE_GRAS = 24;
+    private static final int TOTAL_JAMON = 25;
+    private static final int TOTAL_OLIVES = 400;
+    private static final int TOTAL_HAM = 100;
+    private static final int TOTAL_CAVIAR = 124;
+    private static final int TOTAL_BUCKWHEAT = 1_000_000;
+    private static final int TOTAL_SAUSAGES = 10_000;
+    private static final Map<String, Integer> GLOBAL_ORDER =
+            new ImmutableMap.Builder<String, Integer>()
+                    .put("Cabernet", TOTAL_CABERNET)
+                    .put("Foie Gras", TOTAL_FOIE_GRAS)
+                    .put("Jamon", TOTAL_JAMON)
+                    .put("Olives", TOTAL_OLIVES)
+                    .put("Ham", TOTAL_HAM)
+                    .put("Caviar", TOTAL_CAVIAR)
+                    .put("Buckwheat", TOTAL_BUCKWHEAT)
+                    .put("Sausages", TOTAL_SAUSAGES)
+                    .build();
 }

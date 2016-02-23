@@ -50,10 +50,10 @@ public final class SecondPartTasks {
         return compositions.entrySet()
                            .stream()
                            .collect(Collectors.maxBy(Comparator.comparing(
-                                     e -> e.getValue()
-                                           .stream()
-                                           .mapToLong(String::length)
-                                           .sum())))
+                                        e -> e.getValue()
+                                              .stream()
+                                              .mapToLong(String::length)
+                                              .sum())))
                            .get()
                            .getKey();
     }
