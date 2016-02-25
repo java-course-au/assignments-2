@@ -49,7 +49,6 @@ public abstract class LazyFactory {
 
     private static final class LockFreeLazy<T> implements Lazy<T> {
         private volatile Supplier<? extends T> supplier;
-        @SuppressWarnings("unused")
         private volatile Object data = NONE;
 
         private static final AtomicReferenceFieldUpdater<LockFreeLazy, Object> DATA_UPDATER
@@ -62,12 +61,13 @@ public abstract class LazyFactory {
 
         @Override
         public T get() {
-            if (DATA_UPDATER.get(this) == NONE) {
-                T result = (T) supplier.get();
+            if (data == NONE) {
+                T result = supplier.get();
                 DATA_UPDATER.compareAndSet(this, NONE, result);
+                supplier = null;
             }
 
-            return (T) DATA_UPDATER.get(this);
+            return (T) data;
         }
     }
 

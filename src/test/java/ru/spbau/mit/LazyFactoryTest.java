@@ -11,6 +11,11 @@ import java.util.function.Supplier;
 import static org.junit.Assert.*;
 
 public class LazyFactoryTest {
+
+    private static final Integer VALUE = 5;
+    private static final Integer TIME_TO_SLEEP = 1000;
+    private static final int THREAD_COUNT = 100;
+
     private interface CountingSupplier<T> extends Supplier<T> {
         int getCount();
     }
@@ -18,11 +23,15 @@ public class LazyFactoryTest {
     /*
      * Test set one: just check double getting.
      */
-    private void testBasic(Function<Supplier<Integer>, Lazy<Integer>> provider, Integer value) {
-        testBasic(provider, value, true);
+    private void doTestBasic(Function<Supplier<Integer>, Lazy<Integer>> provider, boolean checkSingleGet) {
+        doTestBasic(provider, VALUE, checkSingleGet);
+        doTestBasic(provider, null, checkSingleGet);
     }
 
-    private void testBasic(Function<Supplier<Integer>, Lazy<Integer>> provider, final Integer value, boolean checkSingleGet) {
+    private void doTestBasic(
+            Function<Supplier<Integer>, Lazy<Integer>> provider,
+            final Integer value,
+            boolean checkSingleGet) {
         CountingSupplier<Integer> supplier = new CountingSupplier<Integer>() {
             private int count = 0;
 
@@ -41,10 +50,10 @@ public class LazyFactoryTest {
         Lazy<Integer> lazy = provider.apply(supplier);
         assertEquals(0, supplier.getCount());
         Object result = lazy.get();
-        assertEquals(value, result);
+        assertTrue(value == result);
         assertEquals(1, supplier.getCount());
         result = lazy.get();
-        assertEquals(value, result);
+        assertTrue(value == result);
 
         if (checkSingleGet) {
             assertEquals(1, supplier.getCount());
@@ -56,66 +65,42 @@ public class LazyFactoryTest {
      */
     @Test
     public void testGetSingleThreadLazyBasic() throws Exception {
-        testBasic(LazyFactory::getSingleThreadLazy, 5);
+        doTestBasic(LazyFactory::getSingleThreadLazy, true);
     }
 
     @Test
     public void testGetConcurrentLazyBasic() {
-        testBasic(LazyFactory::getConcurrentLazy, 5);
+        doTestBasic(LazyFactory::getConcurrentLazy, true);
     }
 
     @Test
     public void testGetLockFreeLazyBasic() {
         // LockFree is allowed (and actually can) get value more than one time
-        testBasic(LazyFactory::getLockFreeLazy, 5, false);
-    }
-
-    /*
-     * And null values
-     */
-    @Test
-    public void testGetSingleThreadLazyBasicNull() throws Exception {
-        testBasic(LazyFactory::getSingleThreadLazy, null);
-    }
-
-    @Test
-    public void testGetConcurrentLazyBasicNull() {
-        testBasic(LazyFactory::getConcurrentLazy, null);
-    }
-
-    @Test
-    public void testGetLockFreeLazyBasicNull() {
-        // LockFree is allowed (and actually will!) get value more than one time
-        testBasic(LazyFactory::getLockFreeLazy, null, false);
+        doTestBasic(LazyFactory::getLockFreeLazy, VALUE, false);
     }
 
     /*
      * Test set two: create a bunch of threads, and look them getting the same value
      */
-    private void testConcurrency(Function<Supplier<Integer>, Lazy<Integer>> provider) {
-        testConcurrency(provider, true);
+    private void doTestConcurrency(Function<Supplier<Integer>, Lazy<Integer>> provider) {
+        doTestConcurrency(provider, true);
     }
 
-    private void testConcurrency(Function<Supplier<Integer>, Lazy<Integer>> provider, boolean checkSingleGet) {
-        final Integer VALUE = 5;
-        final int THREAD_COUNT = 100;
-
+    private void doTestConcurrency(Function<Supplier<Integer>, Lazy<Integer>> provider, boolean checkSingleGet) {
         CountingSupplier<Integer> supplier = new CountingSupplier<Integer>() {
             private int count = 0;
 
             @Override
             public Integer get() {
+                int toReturn;
                 synchronized (this) {
-                    count++;
+                    toReturn = count++;
                 }
-                Thread.yield(); // JUST
-                Thread.yield(); // YIELD
-                Thread.yield(); // IT
-                Thread.yield(); // MAKE
-                Thread.yield(); // THIS
-                Thread.yield(); // THREAD
-                Thread.yield(); // STOP
-                return VALUE;
+                try {
+                    Thread.sleep(TIME_TO_SLEEP);
+                } catch (InterruptedException ignored) {
+                }
+                return toReturn;
             }
 
             @Override
@@ -131,7 +116,7 @@ public class LazyFactoryTest {
         for (int i = 0; i != THREAD_COUNT; ++i) {
             futures.add(executor.submit(() -> {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(TIME_TO_SLEEP);
                 } catch (InterruptedException ignored) {
                 }
 
@@ -139,10 +124,16 @@ public class LazyFactoryTest {
             }));
         }
 
+        Object lastValue = null;
+        boolean wasValue = false;
         for (Future<Integer> future : futures) {
             try {
-                Integer result = future.get();
-                assertEquals(VALUE, result);
+                Object newValue = future.get();
+                if (wasValue) {
+                    assertTrue(lastValue == newValue);
+                }
+                wasValue = true;
+                lastValue = newValue;
             } catch (InterruptedException | ExecutionException ignored) {
             }
         }
@@ -154,76 +145,12 @@ public class LazyFactoryTest {
 
     @Test
     public void testGetConcurrencyLazyConcurrent() {
-        testConcurrency(LazyFactory::getConcurrentLazy);
+        doTestConcurrency(LazyFactory::getConcurrentLazy);
     }
 
     @Test
     public void testGetLockFreeLazyConcurrent() {
         // LockFree is allowed (and actually can) get value more than one time
-        testConcurrency(LazyFactory::getLockFreeLazy, false);
-    }
-
-    /*
-     * Test set three: consistency.
-     */
-    private void testConsistency(Function<Supplier<Integer>, Lazy<Integer>> provider) {
-        final int THREAD_COUNT = 100;
-
-        Supplier<Integer> supplier = new Supplier<Integer>() {
-            private int count = 0;
-
-            @Override
-            public Integer get() {
-                int toReturn;
-                synchronized (this) {
-                    toReturn = count++;
-                }
-                Thread.yield(); // JUST
-                Thread.yield(); // YIELD
-                Thread.yield(); // IT
-                Thread.yield(); // MAKE
-                Thread.yield(); // THIS
-                Thread.yield(); // THREAD
-                Thread.yield(); // STOP
-                return toReturn;
-            }
-        };
-
-        Lazy<Integer> lazy = provider.apply(supplier);
-
-        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
-        List<Future<Integer>> futures = new ArrayList<>();
-        for (int i = 0; i != THREAD_COUNT; ++i) {
-            futures.add(executor.submit(() -> {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignored) {
-                }
-
-                return lazy.get();
-            }));
-        }
-
-        Integer lastValue = null;
-        for (Future<Integer> future : futures) {
-            try {
-                Integer newValue = future.get();
-                if (lastValue != null) {
-                    assertEquals(lastValue.intValue(), newValue.intValue());
-                }
-                lastValue = newValue;
-            } catch (InterruptedException | ExecutionException ignored) {
-            }
-        }
-    }
-
-    @Test
-    public void testGetConcurrencyLazyConsistency() {
-        testConsistency(LazyFactory::getConcurrentLazy);
-    }
-
-    @Test
-    public void testGetLockFreeLazyConsistency() {
-        testConsistency(LazyFactory::getLockFreeLazy);
+        doTestConcurrency(LazyFactory::getLockFreeLazy, false);
     }
 }
