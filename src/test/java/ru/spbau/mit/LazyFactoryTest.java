@@ -1,103 +1,77 @@
 package ru.spbau.mit;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+
+import org.hamcrest.Factory;
 import org.junit.Test;
 
 import java.util.function.Supplier;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 /**
  * Created by rebryk on 14/02/16.
  */
 
 public class LazyFactoryTest {
-    public static Function<Supplier<Integer>, Lazy<Integer>> funcLazy = new Function<Supplier<Integer>, Lazy<Integer>>() {
-        @Override
-        public Lazy<Integer> apply(Supplier<Integer> integerSupplier) {
-            return LazyFactory.createLazy(integerSupplier);
-        }
-    };
-
-    public static Function<Supplier<Integer>, Lazy<Integer>> funcLazyMultithreading = new Function<Supplier<Integer>, Lazy<Integer>>() {
-        @Override
-        public Lazy<Integer> apply(Supplier<Integer> integerSupplier) {
-            return LazyFactory.createLazyMultithreading(integerSupplier);
-        }
-    };
-
-    public static Function<Supplier<Integer>, Lazy<Integer>> funcLazyLockFree = new Function<Supplier<Integer>, Lazy<Integer>>() {
-        @Override
-        public Lazy<Integer> apply(Supplier<Integer> integerSupplier) {
-            return LazyFactory.createLazyLockFree(integerSupplier);
-        }
-    };
-
-
-    public class Flag {
-        private boolean value = false;
-
-        public boolean get() {
-            return value;
-        }
-
-        public void set() {
-            value = true;
-        }
-    }
-
-    public void checkLazy(final Function <Supplier<Integer>, Lazy<Integer>> function) {
+    public void checkLazy(final Function <Supplier, Lazy> function) {
         final AtomicInteger counter = new AtomicInteger();
         counter.set(0);
 
-        Lazy<Integer> lazy = function.apply(() -> {counter.getAndIncrement(); return 42;});
+        Supplier<int[]> supplier = () -> {
+            counter.getAndIncrement();
+            return new int[]{1, 2, 3};
+        };
 
+        Lazy lazy = function.apply(supplier);
         assertEquals(counter.get(), 0);
-        Integer obj = lazy.get();
-        assertEquals((int)obj, 42);
+        assertSame(lazy.get(), lazy.get());
         assertEquals(counter.get(), 1);
-        assertEquals(lazy.get(), obj);
-        assertEquals(counter.get(), 1);
+        assertArrayEquals((int[])lazy.get(), supplier.get());
 
         counter.set(0);
-        lazy = function.apply(() -> {counter.getAndIncrement(); return null;});
+        lazy = function.apply(() -> {
+            counter.getAndIncrement();
+            return null;
+        });
 
         assertEquals(counter.get(), 0);
-        obj = lazy.get();
-        assertEquals(obj, null);
+        assertEquals(lazy.get(), null);
         assertEquals(counter.get(), 1);
-        assertEquals(lazy.get(), obj);
+        assertEquals(lazy.get(), lazy.get());
         assertEquals(counter.get(), 1);
     }
 
-    public void checkMultithreadingSingle(final Function <Supplier<Integer>, Lazy<Integer>> function) {
+    public void checkMultithreadingSingle(final Function <Supplier, Lazy> function) {
         final AtomicInteger counter = new AtomicInteger();
         counter.set(0);
 
-        final Lazy<Integer> lazy = function.apply(() -> {counter.getAndIncrement(); return 42;});
+        Supplier<int[]> supplier = () -> {
+            counter.getAndIncrement();
+            return new int[]{1, 2, 3};
+        };
+
+        final Lazy lazy = function.apply(supplier);
         assertEquals(counter.get(), 0);
 
-        final Flag started = new Flag();
+        CyclicBarrier barrier = new CyclicBarrier(25);
         for (int i = 0; i < 25; ++i) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (!started.get()) {
-                        // waiting
+            new Thread(() -> {
+                    try {
+                        barrier.await();
+                        assertSame(lazy.get(), lazy.get());
+                        assertArrayEquals((int[]) lazy.get(), supplier.get());
+                    } catch (InterruptedException | BrokenBarrierException ex) {
+                        // exception
                     }
-                    assertSame(lazy.get(), lazy.get());
-                    assertEquals((int) lazy.get(), 42);
-                    assertEquals(counter.get(), 1);
-                }
-            }).start();
+                }).start();
         }
-        started.set();
     }
 
-    public void checkMultithreading(final Function <Supplier<Integer>, Lazy<Integer>> function) {
+    public void checkMultithreading(final Function <Supplier, Lazy> function) {
         for (int i = 0; i < 5; ++i) {
             checkMultithreadingSingle(function);
         }
@@ -105,26 +79,26 @@ public class LazyFactoryTest {
 
     @Test
     public void testCreateLazy() {
-        checkLazy(funcLazy);
+        checkLazy(LazyFactory::createLazy);
     }
 
     @Test
     public void testCreateLazyMultithreading() {
-        checkLazy(funcLazyMultithreading);
+        checkLazy(LazyFactory::createLazyMultithreading);
     }
 
     @Test
     public void testCreateLazyMultithreadingMulti() {
-        checkMultithreading(funcLazyMultithreading);
+        checkMultithreading(LazyFactory::createLazyMultithreading);
     }
 
     @Test
     public void testCreateLazyLockFree() {
-        checkLazy(funcLazyLockFree);
+        checkLazy(LazyFactory::createLazyLockFree);
     }
 
     @Test
     public void testCreateLazyLockFreeMulti() {
-        checkMultithreading(funcLazyLockFree);
+        checkMultithreading(LazyFactory::createLazyLockFree);
     }
 }
