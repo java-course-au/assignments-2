@@ -66,7 +66,7 @@ public class LazyFactoryTest {
             assertEquals("a", supplierReturnsNull.getCnt());
         }
     }
-    
+
     private void checkMultiThread(LazyFactoryFromSupplier factory, boolean callSupplierOnlyOnce) {
         SupplierCounter supplier = new SupplierCounter();
         Lazy<String> lazy = factory.createLazy(supplier);
@@ -105,27 +105,27 @@ public class LazyFactoryTest {
     }
 
     @Test
-    public void testCreateLazyOneThread_supplierCounter() {
+    public void testCreateLazyOneThread() {
         checkOneThread(LazyFactory::createLazyOneThread);
     }
 
     @Test
-    public void testCreateLazyMultiThread_supplierCounter() {
+    public void testCreateLazyMultiThread() {
         checkOneThread(LazyFactory::createLazyMultiThread);
     }
 
     @Test
-    public void testCreateLazyLockFree_supplierCounter() {
+    public void testCreateLazyLockFree() {
         checkOneThread(LazyFactory::createLazyLockFree);
     }
 
     @Test
-    public void testCreateLazyMultiThread_concurrency() {
+    public void testConcurrencyCreateLazyMultiThread() {
         checkMultiThread(LazyFactory::createLazyMultiThread, true);
     }
 
     @Test
-    public void testCreateLazyLockFree_concurrency() {
+    public void testConcurrencyCreateLazyLockFree() {
         checkMultiThread(LazyFactory::createLazyLockFree, false);
     }
 }
