@@ -4,6 +4,9 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -13,7 +16,7 @@ public class LazyFactoryTest {
 
     private static class CounterSupplier<T> implements Supplier<T> {
         private T result;
-        private int counter = 0;
+        private AtomicInteger counter = new AtomicInteger(0);
 
         CounterSupplier(T result) {
             this.result = result;
@@ -25,7 +28,7 @@ public class LazyFactoryTest {
         }
 
         int getCounter() {
-            return counter;
+            return counter.get();
         }
 
         T getResult() {
@@ -33,7 +36,7 @@ public class LazyFactoryTest {
         }
 
         protected void incrementCounter() {
-            counter++;
+            counter.incrementAndGet();
         }
     }
 
@@ -62,11 +65,11 @@ public class LazyFactoryTest {
         }
     }
 
-    public <T> void checkCounterAndSingleResult(Function<Supplier<T>, Lazy<T>> getLazyFactory,
-                                                CounterSupplier<T> supplier) {
-        Lazy<T> lazy = getLazyFactory.apply(supplier);
+    public void checkCounterAndSingleResult(Function<Supplier<Integer>, Lazy<Integer>> getLazyFactory,
+                                                CounterSupplier<Integer> supplier) {
+        Lazy<Integer> lazy = getLazyFactory.apply(supplier);
         assertTrue(supplier.getCounter() == 0);
-        List<T> results = new ArrayList<>();
+        List<Integer> results = new ArrayList<>();
         for (int i = 0; i < ITERATION_NUMBER; i++) {
             results.add(lazy.get());
         }
@@ -77,17 +80,24 @@ public class LazyFactoryTest {
         assertEquals(results.get(0), supplier.get());
     }
 
-    public <T> void checkMultiThreading(Function<Supplier<T>, Lazy<T>> getLazyFactory,
-                                        CounterSupplier<T> supplier, boolean areMultipleCalculationsAllowed) {
-        Lazy<T> lazy = getLazyFactory.apply(supplier);
+    public void checkMultiThreading(Function<Supplier<Integer>, Lazy<Integer>> getLazyFactory,
+                                    CounterSupplier<Integer> supplier,
+                                    boolean areMultipleCalculationsAllowed) {
+        Lazy<Integer> lazy = getLazyFactory.apply(supplier);
         assertTrue(supplier.getCounter() == 0);
         List<Thread> threads = new ArrayList<>();
-        List<T> results = Collections.synchronizedList(new ArrayList<>());
+        List<Integer> results = Collections.synchronizedList(new ArrayList<>());
 
+        CyclicBarrier barrier = new CyclicBarrier(THREAD_NUMBER);
         for (int i = 0; i < THREAD_NUMBER; i++) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException | BrokenBarrierException exception) {
+                        exception.printStackTrace();
+                    }
                     results.add(lazy.get());
                 }
             }));
@@ -104,10 +114,6 @@ public class LazyFactoryTest {
         }
 
         for (int i = 0; i < THREAD_NUMBER; i++) {
-            if (results.get(0) != results.get(i)) {
-                System.out.println(results.get(0));
-                System.out.println(results.get(i));
-            }
             assertTrue(results.get(0) == results.get(i));
         }
         if (!areMultipleCalculationsAllowed) {
@@ -117,7 +123,7 @@ public class LazyFactoryTest {
         assertEquals(results.get(0), supplier.get());
     }
 
-    public <T> void checkNullSupplier(Function<Supplier<T>, Lazy<T>> getLazyFactory) {
+    public void checkNullSupplier(Function<Supplier<Integer>, Lazy<Integer>> getLazyFactory) {
         checkCounterAndSingleResult(getLazyFactory, new NullSupplier<>());
     }
 
