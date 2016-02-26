@@ -8,49 +8,62 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class LazyFactoryTest {
-    private abstract static class CounterSupplier<T> implements Supplier<T> {
-        protected T result;
-        protected int counter = 0;
+    private static final int ITERATION_NUMBER = 100;
+    private static final int THREAD_NUMBER = 100;
 
-        public CounterSupplier(T result) {
+    private static class CounterSupplier<T> implements Supplier<T> {
+        private T result;
+        private int counter = 0;
+
+        CounterSupplier(T result) {
             this.result = result;
         }
 
-        public int getCounter() {
+        @Override
+        public T get() {
+            return result;
+        }
+
+        int getCounter() {
             return counter;
+        }
+
+        T getResult() {
+            return result;
+        }
+
+        protected void incrementCounter() {
+            counter++;
         }
     }
 
     private static class IntegerCounterSupplier extends CounterSupplier<Integer> {
         private static final int RESULT = 10;
-        public IntegerCounterSupplier() {
+        IntegerCounterSupplier() {
             super(RESULT);
         }
 
         @Override
         public Integer get() {
-            counter++;
-            return result;
+            incrementCounter();
+            return getResult();
         }
     }
 
-    private static class NullSupplier <T> extends CounterSupplier<T> {
-        public NullSupplier() {
+    private static class NullSupplier<T> extends CounterSupplier<T> {
+        NullSupplier() {
             super(null);
         }
 
         @Override
         public T get() {
-            counter++;
+            incrementCounter();
             return null;
         }
     }
 
-    public <T> void checkCounterAndSingleResult(Function<CounterSupplier<T>, Lazy<T>> getLazyFactory,
-                                                CounterSupplier<T> supplier,
-                                                boolean areMultipleCalculationsAllowed) {
-        final int ITERATION_NUMBER = 100;
-
+    public <T> void checkCounterAndSingleResult(Function<Supplier<T>, Lazy<T>> getLazyFactory,
+                                                CounterSupplier<T> supplier) {
         Lazy<T> lazy = getLazyFactory.apply(supplier);
         assertTrue(supplier.getCounter() == 0);
         List<T> results = new ArrayList<>();
@@ -60,16 +73,12 @@ public class LazyFactoryTest {
         for (int i = 0; i < ITERATION_NUMBER; i++) {
             assertTrue(results.get(0) == results.get(i));
         }
-        if (!areMultipleCalculationsAllowed) {
-            assertEquals(supplier.getCounter(), 1);
-        }
+        assertEquals(supplier.getCounter(), 1);
         assertEquals(results.get(0), supplier.get());
     }
 
-    public <T> void checkMultiThreading(Function<CounterSupplier<T>, Lazy<T>> getLazyFactory,
+    public <T> void checkMultiThreading(Function<Supplier<T>, Lazy<T>> getLazyFactory,
                                         CounterSupplier<T> supplier, boolean areMultipleCalculationsAllowed) {
-        final int THREAD_NUMBER = 100;
-
         Lazy<T> lazy = getLazyFactory.apply(supplier);
         assertTrue(supplier.getCounter() == 0);
         List<Thread> threads = new ArrayList<>();
@@ -104,33 +113,39 @@ public class LazyFactoryTest {
         if (!areMultipleCalculationsAllowed) {
             assertEquals(supplier.getCounter(), 1);
         }
+        assertTrue(supplier.getCounter() >= 1);
+        assertEquals(results.get(0), supplier.get());
     }
 
-    public <T> void checkNullSupplier(Function<CounterSupplier<T>, Lazy<T>> getLazyFactory,
-                                      NullSupplier supplier, boolean areMultipleCalculationsAllowed) {
-        checkCounterAndSingleResult(getLazyFactory, supplier, areMultipleCalculationsAllowed);
+    public <T> void checkNullSupplier(Function<Supplier<T>, Lazy<T>> getLazyFactory) {
+        checkCounterAndSingleResult(getLazyFactory, new NullSupplier<>());
+    }
+
+    public void checkSingleThreadContracts(Function<Supplier<Integer>, Lazy<Integer>> getLazyFactory) {
+        checkCounterAndSingleResult(getLazyFactory, new IntegerCounterSupplier());
+        checkNullSupplier(getLazyFactory);
+    }
+
+    public void checkMultiThreadContracts(Function<Supplier<Integer>, Lazy<Integer>> getLazyFactory,
+                                          boolean areMultipleCalculationsAllowed) {
+        checkMultiThreading(getLazyFactory, new IntegerCounterSupplier(), areMultipleCalculationsAllowed);
+        checkMultiThreading(getLazyFactory, new NullSupplier<>(), areMultipleCalculationsAllowed);
     }
 
     @Test
     public void testSingleThreadLazy() {
-        checkCounterAndSingleResult(LazyFactory::createSingleThreadLazy, new IntegerCounterSupplier(), false);
-        checkNullSupplier(LazyFactory::createSingleThreadLazy, new NullSupplier(), false);
+            checkSingleThreadContracts(LazyFactory::createSingleThreadLazy);
     }
 
     @Test
     public void testMultipleThreadLazy() {
-        checkCounterAndSingleResult(LazyFactory::createMultipleThreadLazy, new IntegerCounterSupplier(), false);
-        checkMultiThreading(LazyFactory::createMultipleThreadLazy, new IntegerCounterSupplier(), false);
-        checkNullSupplier(LazyFactory::createMultipleThreadLazy, new NullSupplier(), false);
-        checkMultiThreading(LazyFactory::createMultipleThreadLazy, new NullSupplier(), false);
+        checkSingleThreadContracts(LazyFactory::createMultipleThreadLazy);
+        checkMultiThreadContracts(LazyFactory::createMultipleThreadLazy, false);
     }
 
     @Test
     public void testLockFreeMultipleThreadLazy() {
-        checkCounterAndSingleResult(LazyFactory::createLockFreeMultipleThreadLazy,
-                new IntegerCounterSupplier(), true);
-        checkMultiThreading(LazyFactory::createLockFreeMultipleThreadLazy, new IntegerCounterSupplier(), true);
-        checkNullSupplier(LazyFactory::createLockFreeMultipleThreadLazy, new NullSupplier(), true);
-        checkMultiThreading(LazyFactory::createLockFreeMultipleThreadLazy, new NullSupplier(), true);
+        checkSingleThreadContracts(LazyFactory::createLockFreeMultipleThreadLazy);
+        checkMultiThreadContracts(LazyFactory::createLockFreeMultipleThreadLazy, true);
     }
 }
