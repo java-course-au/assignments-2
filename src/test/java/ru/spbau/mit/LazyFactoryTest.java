@@ -2,6 +2,8 @@ package ru.spbau.mit;
 
 import org.junit.Test;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import static org.junit.Assert.*;
@@ -11,7 +13,11 @@ import static org.junit.Assert.*;
  */
 public class LazyFactoryTest {
     private class Tester implements Supplier<Object> {
-        public int callsCounter = 0;
+        private int callsCounter = 0;
+
+        public int getCallsCounter() {
+            return callsCounter;
+        }
 
         public Object get() {
             callsCounter++;
@@ -19,17 +25,18 @@ public class LazyFactoryTest {
         }
     }
 
+    private static final int NUMBER_OF_CALLS = 5;
     private void checkOneThread(Function<Supplier<Object>, Lazy<Object>> lazyCreator) {
         Tester tester = new Tester();
         Lazy<Object> lazy = lazyCreator.apply(tester);
 
-        assertEquals(tester.callsCounter, 0);
+        assertEquals(tester.getCallsCounter(), 0);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < NUMBER_OF_CALLS; i++) {
             assertTrue(lazy.get() == null);
         }
 
-        assertEquals(tester.callsCounter, 1);
+        assertEquals(tester.getCallsCounter(), 1);
 
         Lazy<Object> lazyObj = lazyCreator.apply(() -> new Object());
 
@@ -55,11 +62,17 @@ public class LazyFactoryTest {
     }
 
 
+    private static final int SLEEP_TIME = 100;
     private class SleepyTester implements Supplier<Integer> {
-        int callsCounter = 0;
+        private int callsCounter = 0;
+
+        public int getCallsCounter() {
+            return callsCounter;
+        }
+
         public Integer get() {
             try {
-                Thread.sleep(100);
+                Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -67,21 +80,36 @@ public class LazyFactoryTest {
         }
     }
 
+    private static final int NUMBER_OF_THREADS = 10;
     private void checkRaceCondition(Function<Supplier<Integer>, Lazy<Integer>> lazyCreator,
                                     boolean checkOnlyOnceFlag) {
-        Integer[] values = new Integer[10];
-        Thread[] threads = new Thread[10];
+        Integer[] values = new Integer[NUMBER_OF_THREADS];
+        Thread[] threads = new Thread[NUMBER_OF_THREADS];
         SleepyTester tester = new SleepyTester();
+
+        CyclicBarrier barrier = new CyclicBarrier(NUMBER_OF_THREADS);
 
         Lazy<Integer> lazyInteger = lazyCreator.apply(tester);
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             final int ind = i;
-            threads[ind] = new Thread(() -> {values[ind] = lazyInteger.get();});
-            threads[ind].start();
+            threads[ind] = new Thread(() -> {
+                try {
+                    barrier.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (BrokenBarrierException e) {
+                    throw new RuntimeException(e);
+                }
+                values[ind] = lazyInteger.get();
+            });
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < NUMBER_OF_THREADS; i++) {
+            threads[i].start();
+        }
+
+        for (int i = 0; i < NUMBER_OF_THREADS; i++) {
             try {
                 threads[i].join();
             } catch (InterruptedException e) {
@@ -89,12 +117,12 @@ public class LazyFactoryTest {
             }
         }
 
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < NUMBER_OF_THREADS; i++) {
             assertTrue(values[i - 1] == values[i]);
         }
 
         if (checkOnlyOnceFlag) {
-            assertEquals(tester.callsCounter, 1);
+            assertEquals(tester.getCallsCounter(), 1);
         }
     }
 

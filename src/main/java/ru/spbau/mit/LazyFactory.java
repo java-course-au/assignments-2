@@ -33,7 +33,7 @@ public final class LazyFactory {
     }
 
     private static class MultithreadLazy<T> implements Lazy<T> {
-        private volatile T result;
+        private T result;
         private volatile Supplier<T> supplier;
 
         MultithreadLazy(Supplier<T> supplier) {
@@ -73,7 +73,13 @@ public final class LazyFactory {
         @SuppressWarnings("unchecked")
         public T get() {
             if (result == NONE) {
-                UPDATER.compareAndSet(this, NONE, supplier.get());
+                Supplier<T> local = supplier;
+
+                if (local != null) {
+                    if (UPDATER.compareAndSet(this, NONE, supplier.get())) {
+                        supplier = null;
+                    }
+                }
             }
 
             return (T) result;
