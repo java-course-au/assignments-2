@@ -83,82 +83,67 @@ public class LazyFactoryTest {
         }
     }
 
+    private <T> void checkContractsMultithread(final Function<Supplier<Object>, Lazy<Object>> createLazy)
+            throws InterruptedException {
+        try {
+            doTestMultithread(createLazy, new SupplierFunctions()::doCheckMultipleExecutions, NUM_THREADS);
+        } catch (MultipleExecutionsException e) {
+            throw new RuntimeException("While checking multiple executions multithread", e);
+        }
+
+        doTestMultithread(createLazy, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
+
+        doTestMultithread(createLazy, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
+
+        try {
+            createLazy.apply(LAZY_SUPPLIER);
+        } catch (NotLazyException e) {
+            throw new RuntimeException("Not lazy multithread", e);
+        }
+
+        try {
+            doTestMultithread(createLazy, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
+                    NUM_THREADS);
+        } catch (MultipleExecutionsException e) {
+            throw new RuntimeException("Multiple executions multithread", e);
+        }
+    }
+
+    private <T> void checkContractsOneThread(final Function<Supplier<Object>, Lazy<Object>> createLazy) {
+        doTestOneThread(createLazy, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
+
+        doTestOneThread(createLazy, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
+
+        try {
+            createLazy.apply(LAZY_SUPPLIER);
+        } catch (NotLazyException e) {
+            throw new RuntimeException("Not lazy one thread", e);
+        }
+
+        try {
+            doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
+                    NUM_THREADS);
+        } catch (MultipleExecutionsException e) {
+            throw new RuntimeException("Multiple executions one thread", e);
+        }
+    }
+
     // does test one-threaded Lazy
     @Test
-    public void testCreateLazyOneThread() throws Exception {
-        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyOneThreadReturnsNull() {
-        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyOneThreadLazyLaziness() throws Exception {
-        LazyFactory.createLazyOneThread(LAZY_SUPPLIER);
-    }
-
-    @Test
-    public void testCreateLazyOneThreadMultipleExecutionsWithNull() throws Exception {
-        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
-                NUM_THREADS);
+    public void testOneThread() {
+        checkContractsOneThread(LazyFactory::createLazyOneThread);
     }
 
     // does test multithreaded Lazy
     @Test
-    public void testCreateLazyMultithreadMultipleExecution() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutions,
-                NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyMultithread() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyMultithreadReturnsNull() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyMultithreadLazyLaziness() throws Exception {
-        LazyFactory.createLazyMultithread(LAZY_SUPPLIER);
-    }
-
-    @Test
-    public void testCreateLazyMultithreadMultipleExecutionsWithNull() throws Exception {
-        doTestOneThread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
-                NUM_THREADS);
+    public void testMultithread() throws InterruptedException {
+        checkContractsMultithread(LazyFactory::createLazyMultithread);
     }
 
     // does test lockfree Lazy
     @Test
-    public void testCreateLazyLockfreeMultipleExecution() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutions,
-                NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyLockfree() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyLockfreeReturnsNull() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
-    }
-
-    @Test
-    public void testCreateLazyLockfreeLazyLaziness() throws Exception {
-        LazyFactory.createLazyLockfree(LAZY_SUPPLIER);
-    }
-
-    @Test
-    public void testCreateLazyLockfreeMultipleExecutionsWithNull() throws Exception {
-        doTestOneThread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
-                NUM_THREADS);
+    public void testLockfree() throws InterruptedException {
+        checkContractsMultithread(LazyFactory::createLazyLockfree);
     }
 
     class MultipleExecutionsException extends RuntimeException {
