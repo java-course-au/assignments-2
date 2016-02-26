@@ -10,33 +10,11 @@ import static junit.framework.Assert.assertTrue;
 
 public class LazyFactoryTest {
 
-    class MultipleExecutionsException extends RuntimeException {
-    }
-
-    class SupplierFunctions {
-
-        public Boolean executed = false;
-
-        public Object doCheckMultipleExecutions() {
-            if (executed) {
-                throw new MultipleExecutionsException();
-            }
-            executed = true;
-            return new Object();
-        }
-
-        public Object doCheckReturnNull() {
-            return null;
-        }
-
-        public Object doCheckRandObjects() {
-            Random gen = new Random();
-            if (gen.nextInt() % 2 == 1) {
-                return new Object();
-            }
-            return null;
-        }
-    }
+    private static final int NUM_THREADS = 10;
+    private final Supplier<Object> LAZY_SUPPLIER = () -> {
+        new SupplierFunctions().doCheckLazyLaziness();
+        return null;
+    };
 
 
     // the two following functions accept a factory, which producec Lazy's,
@@ -75,8 +53,8 @@ public class LazyFactoryTest {
 
         class MyRunnable implements Runnable {
 
-            private T result = lazy.get();
             public MultipleExecutionsException exception = null;
+            private T result = lazy.get();
 
             @Override
             public void run() {
@@ -108,43 +86,118 @@ public class LazyFactoryTest {
     // does test one-threaded Lazy
     @Test
     public void testCreateLazyOneThread() throws Exception {
-        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckRandObjects, 10);
+        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
     }
 
     @Test
     public void testCreateLazyOneThreadReturnsNull() {
-        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckReturnNull, 10);
+        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
+    }
+
+    @Test
+    public void testCreateLazyOneThreadLazyLaziness() throws Exception {
+        LazyFactory.createLazyOneThread(LAZY_SUPPLIER);
+    }
+
+    @Test
+    public void testCreateLazyOneThreadMultipleExecutionsWithNull() throws Exception {
+        doTestOneThread(LazyFactory::createLazyOneThread, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
+                NUM_THREADS);
     }
 
     // does test multithreaded Lazy
     @Test
     public void testCreateLazyMultithreadMultipleExecution() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutions, 10);
+        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutions,
+                NUM_THREADS);
     }
 
     @Test
     public void testCreateLazyMultithread() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckRandObjects, 10);
+        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
     }
 
     @Test
     public void testCreateLazyMultithreadReturnsNull() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckReturnNull, 10);
+        doTestMultithread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
+    }
+
+    @Test
+    public void testCreateLazyMultithreadLazyLaziness() throws Exception {
+        LazyFactory.createLazyMultithread(LAZY_SUPPLIER);
+    }
+
+    @Test
+    public void testCreateLazyMultithreadMultipleExecutionsWithNull() throws Exception {
+        doTestOneThread(LazyFactory::createLazyMultithread, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
+                NUM_THREADS);
     }
 
     // does test lockfree Lazy
     @Test
     public void testCreateLazyLockfreeMultipleExecution() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutions, 10);
+        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutions,
+                NUM_THREADS);
     }
 
     @Test
     public void testCreateLazyLockfree() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckRandObjects, 10);
+        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckRandObjects, NUM_THREADS);
     }
 
     @Test
     public void testCreateLazyLockfreeReturnsNull() throws InterruptedException {
-        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckReturnNull, 10);
+        doTestMultithread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckReturnNull, NUM_THREADS);
+    }
+
+    @Test
+    public void testCreateLazyLockfreeLazyLaziness() throws Exception {
+        LazyFactory.createLazyLockfree(LAZY_SUPPLIER);
+    }
+
+    @Test
+    public void testCreateLazyLockfreeMultipleExecutionsWithNull() throws Exception {
+        doTestOneThread(LazyFactory::createLazyLockfree, new SupplierFunctions()::doCheckMultipleExecutionsWithNull,
+                NUM_THREADS);
+    }
+
+    class MultipleExecutionsException extends RuntimeException {
+    }
+
+    class NotLazyException extends RuntimeException {
+    }
+
+    class SupplierFunctions {
+
+        public Boolean executed = false;
+
+        public Object doCheckMultipleExecutions() {
+            if (executed) {
+                throw new MultipleExecutionsException();
+            }
+            executed = true;
+            return new Object();
+        }
+
+        public Object doCheckMultipleExecutionsWithNull() {
+            doCheckMultipleExecutions();
+            return null;
+        }
+
+        public Object doCheckReturnNull() {
+            return null;
+        }
+
+        public Object doCheckRandObjects() {
+            Random gen = new Random();
+            if (gen.nextInt() % 2 == 1) {
+                return new Object();
+            }
+            return null;
+        }
+
+        public Object doCheckLazyLaziness() {
+            throw new NotLazyException();
+        }
     }
 }

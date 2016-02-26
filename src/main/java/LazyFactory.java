@@ -5,15 +5,14 @@ public final class LazyFactory {
 
     private LazyFactory() {}
 
-    public static final Object NONE = new Object();
+    private static final Object NONE = new Object();
 
-    public static class LazyOneThread<T> implements Lazy<T> {
-        private T result;
+    private static class LazyOneThread<T> implements Lazy<T> {
+        private T result = (T) NONE;
         private Supplier<T> supplier;
 
         public LazyOneThread(Supplier<T> s) {
             supplier = s;
-            result = (T) NONE;
         }
 
         @Override
@@ -31,14 +30,13 @@ public final class LazyFactory {
         return new LazyOneThread<T>(supplier);
     }
 
-    public static class LazyMultithread<T> implements Lazy<T> {
+    private static class LazyMultithread<T> implements Lazy<T> {
 
-        private volatile T result;
+        private volatile T result = (T) NONE;
         private Supplier<T> supplier;
 
         public LazyMultithread(Supplier<T> s) {
             supplier = s;
-            result = (T) NONE;
         }
 
         @Override
@@ -59,16 +57,16 @@ public final class LazyFactory {
         return new LazyMultithread<T>(supplier);
     }
 
-    public static class LazyLockfree<T> implements Lazy<T> {
+    private static class LazyLockfree<T> implements Lazy<T> {
 
         private static final AtomicReferenceFieldUpdater<LazyLockfree, Object> UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(LazyLockfree.class, Object.class, "result");
-        private volatile T result;
+
+        private volatile T result = (T) NONE;
         private Supplier<T> supplier;
 
         public LazyLockfree(Supplier<T> s) {
             supplier = s;
-            result = (T) NONE;
         }
 
         @Override
