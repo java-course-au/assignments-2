@@ -4,6 +4,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import org.hamcrest.Factory;
@@ -45,7 +46,7 @@ public class LazyFactoryTest {
         assertEquals(counter.get(), 1);
     }
 
-    public void checkMultithreadingSingle(final Function <Supplier, Lazy> function) {
+    public void checkMultithreadingSingle(final Function <Supplier, Lazy> function, boolean checkOnceGet) {
         final AtomicInteger counter = new AtomicInteger();
         counter.set(0);
 
@@ -58,22 +59,28 @@ public class LazyFactoryTest {
         assertEquals(counter.get(), 0);
 
         CyclicBarrier barrier = new CyclicBarrier(25);
+        AtomicReference<int[]> ref = new AtomicReference<>(null);
+
         for (int i = 0; i < 25; ++i) {
             new Thread(() -> {
                     try {
                         barrier.await();
-                        assertSame(lazy.get(), lazy.get());
-                        assertArrayEquals((int[]) lazy.get(), supplier.get());
                     } catch (InterruptedException | BrokenBarrierException ex) {
                         // exception
+                    }
+                    ref.compareAndSet(null, (int[])lazy.get());
+                    assertSame(lazy.get(), lazy.get());
+                    assertSame(lazy.get(), ref.get());
+                    if (checkOnceGet) {
+                        assertEquals(counter.get(), 1);
                     }
                 }).start();
         }
     }
 
-    public void checkMultithreading(final Function <Supplier, Lazy> function) {
+    public void checkMultithreading(final Function <Supplier, Lazy> function, boolean checkOnceGet) {
         for (int i = 0; i < 5; ++i) {
-            checkMultithreadingSingle(function);
+            checkMultithreadingSingle(function, checkOnceGet);
         }
     }
 
@@ -89,7 +96,7 @@ public class LazyFactoryTest {
 
     @Test
     public void testCreateLazyMultithreadingMulti() {
-        checkMultithreading(LazyFactory::createLazyMultithreading);
+        checkMultithreading(LazyFactory::createLazyMultithreading, true);
     }
 
     @Test
@@ -99,6 +106,6 @@ public class LazyFactoryTest {
 
     @Test
     public void testCreateLazyLockFreeMulti() {
-        checkMultithreading(LazyFactory::createLazyLockFree);
+        checkMultithreading(LazyFactory::createLazyLockFree, false);
     }
 }
