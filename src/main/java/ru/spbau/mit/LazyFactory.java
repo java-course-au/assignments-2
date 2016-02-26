@@ -9,6 +9,7 @@ public final class LazyFactory {
 
     private static class OneThreadLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
+
         private Supplier<T> supplier;
         private Object result = NONE;
 
@@ -28,6 +29,7 @@ public final class LazyFactory {
 
     private static class MultiThreadLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
+
         private Supplier<T> supplier;
         private volatile Object result = NONE;
 
@@ -51,11 +53,12 @@ public final class LazyFactory {
 
     private static class LockFreeLazy<T> implements Lazy<T> {
         private static final Object NONE = new Object();
-        private Supplier<T> supplier;
         private static final
         AtomicReferenceFieldUpdater<LockFreeLazy, Object> UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(
                         LockFreeLazy.class, Object.class, "result");
+
+        private Supplier<T> supplier;
         private volatile Object result = NONE;
 
         LockFreeLazy(Supplier<T> supplier) {
