@@ -1,7 +1,6 @@
 package ru.spbau.mit;
 
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,20 +16,23 @@ import static org.junit.Assert.*;
  */
 
 public class LazyFactoryTest {
-    public void checkLazy(final Function <Supplier, Lazy> function) {
+    public static final int TEST_COUNT = 5;
+    public static final int THREADS_COUNT = 25;
+
+    public void checkLazy(final Function<Supplier, Lazy> function) {
         final AtomicInteger counter = new AtomicInteger();
         counter.set(0);
 
         Supplier<int[]> supplier = () -> {
             counter.getAndIncrement();
-            return new int[]{1, 2, 3};
+            return new int[]{1, 2};
         };
 
         Lazy lazy = function.apply(supplier);
         assertEquals(counter.get(), 0);
         assertSame(lazy.get(), lazy.get());
         assertEquals(counter.get(), 1);
-        assertArrayEquals((int[])lazy.get(), supplier.get());
+        assertArrayEquals((int[]) lazy.get(), supplier.get());
 
         counter.set(0);
         lazy = function.apply(() -> {
@@ -45,29 +47,29 @@ public class LazyFactoryTest {
         assertEquals(counter.get(), 1);
     }
 
-    public void checkMultithreadingSingle(final Function <Supplier, Lazy> function, boolean checkOnceGet) {
+    public void checkMultithreadingSingle(final Function<Supplier, Lazy> function, boolean checkOnceGet) {
         final AtomicInteger counter = new AtomicInteger();
         counter.set(0);
 
         Supplier<int[]> supplier = () -> {
             counter.getAndIncrement();
-            return new int[]{1, 2, 3};
+            return new int[]{1, 2};
         };
 
         final Lazy lazy = function.apply(supplier);
         assertEquals(counter.get(), 0);
 
-        CyclicBarrier barrier = new CyclicBarrier(25);
+        CyclicBarrier barrier = new CyclicBarrier(THREADS_COUNT);
         AtomicReference<int[]> ref = new AtomicReference<>(null);
 
-        for (int i = 0; i < 25; ++i) {
+        for (int i = 0; i < THREADS_COUNT; ++i) {
             new Thread(() -> {
                     try {
                         barrier.await();
                     } catch (InterruptedException | BrokenBarrierException ex) {
                         // exception
                     }
-                    ref.compareAndSet(null, (int[])lazy.get());
+                    ref.compareAndSet(null, (int[]) lazy.get());
                     assertSame(lazy.get(), lazy.get());
                     assertSame(lazy.get(), ref.get());
                     if (checkOnceGet) {
@@ -77,8 +79,8 @@ public class LazyFactoryTest {
         }
     }
 
-    public void checkMultithreading(final Function <Supplier, Lazy> function, boolean checkOnceGet) {
-        for (int i = 0; i < 5; ++i) {
+    public void checkMultithreading(final Function<Supplier, Lazy> function, boolean checkOnceGet) {
+        for (int i = 0; i < TEST_COUNT; ++i) {
             checkMultithreadingSingle(function, checkOnceGet);
         }
     }
