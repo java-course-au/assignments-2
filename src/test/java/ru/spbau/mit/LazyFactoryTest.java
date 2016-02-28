@@ -20,7 +20,7 @@ public class LazyFactoryTest {
         private AtomicInteger cnt = new AtomicInteger(0);
         private Object result;
 
-        public SupplierCounter(Object result) {
+        SupplierCounter(Object result) {
             this.result = result;
         }
 
@@ -48,7 +48,8 @@ public class LazyFactoryTest {
         }
     }
 
-    private void checkMultiThread(LazyFactoryFromSupplier factory, boolean callSupplierOnlyOnce, Object returnValue) {
+    private void checkMultiThread(LazyFactoryFromSupplier factory, boolean callSupplierOnlyOnce,
+                                  Object returnValue) {
         SupplierCounter supplier = new SupplierCounter(returnValue);
         Lazy<Object> lazy = factory.createLazy(supplier);
         List<Thread> tasks = new ArrayList<>();
