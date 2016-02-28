@@ -104,8 +104,8 @@ public class FirstPartTasksTest {
         assertEquals(
                 3,
                 countAlbumDuplicates(Stream.of(ALBUM_0, ALBUM_1, ALBUM_2, ALBUM_3, ALBUM_4, ALBUM_5, ALBUM_6,
-                        ALBUM_7, ALBUM_8, ALBUM_9, ALBUM_10, ALBUM_11, ALBUM_12, ALBUM_13, ALBUM_14, ALBUM_15, ALBUM_16,
-                        ALBUM_17, ALBUM_4, ALBUM_1, ALBUM_3, ALBUM_18, ALBUM_19)));
+                        ALBUM_7, ALBUM_8, ALBUM_9, ALBUM_10, ALBUM_11, ALBUM_12, ALBUM_13, ALBUM_14, ALBUM_15,
+                        ALBUM_16, ALBUM_17, ALBUM_4, ALBUM_1, ALBUM_3, ALBUM_18, ALBUM_19)));
     }
 
     @Test
@@ -171,7 +171,7 @@ public class FirstPartTasksTest {
                 filterIsInstance(Stream.of("", 1, 2.0, "cde"), Object.class).collect(Collectors.toList()));
     }
 
-
+    // CHECKSTYLE:OFF
     private static final Artist ARTIST_0 = new Artist("Morcheeba");
     private static final Artist ARTIST_1 = new Artist("Temples");
     private static final Artist ARTIST_2 = new Artist("God Help the Girl");
@@ -204,5 +204,5 @@ public class FirstPartTasksTest {
             ALBUM_7, ALBUM_8, ALBUM_9, ALBUM_10, ALBUM_11, ALBUM_12, ALBUM_13, ALBUM_14, ALBUM_15, ALBUM_16, ALBUM_17,
             ALBUM_18, ALBUM_19
     };
-
+    // CHECKSTYLE:ON
 }

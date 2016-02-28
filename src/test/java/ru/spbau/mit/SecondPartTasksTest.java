@@ -32,30 +32,30 @@ public class SecondPartTasksTest {
     public void testCalculateGlobalOrder() {
         List<Map<String, Integer>> data = new ArrayList<Map<String, Integer>>();
 
-        data.add(new HashMap<String, Integer>(){{
+        data.add(new HashMap<String, Integer>() { {
             put("Apples", 1);
             put("Oranges", 10);
             put("Pineapples", 7);
-        }});
+        } });
 
-        data.add(new HashMap<String, Integer>(){{
+        data.add(new HashMap<String, Integer>() { {
             put("Apples", 3);
             put("Plums", 6);
             put("Pineapples", 3);
-        }});
+        } });
 
-        data.add(new HashMap<String, Integer>(){{
+        data.add(new HashMap<String, Integer>() { {
             put("Melons", 13);
             put("Plums", 2);
             put("Pineapples", 10);
-        }});
+        } });
 
         Map<String, Integer> result = calculateGlobalOrder(data);
-        assertEquals(4, (int)result.get("Apples"));
-        assertEquals(10, (int)result.get("Oranges"));
-        assertEquals(20, (int)result.get("Pineapples"));
-        assertEquals(8, (int)result.get("Plums"));
-        assertEquals(13, (int)result.get("Melons"));
+        assertEquals(4, (int) result.get("Apples"));
+        assertEquals(10, (int) result.get("Oranges"));
+        assertEquals(20, (int) result.get("Pineapples"));
+        assertEquals(8, (int) result.get("Plums"));
+        assertEquals(13, (int) result.get("Melons"));
         assertEquals(5, result.entrySet().size());
     }
 }

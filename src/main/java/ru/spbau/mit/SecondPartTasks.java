@@ -2,6 +2,7 @@ package ru.spbau.mit;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -55,10 +56,7 @@ public final class SecondPartTasks {
         return compositions
                 .entrySet()
                 .stream()
-                .max((e1, e2) ->  Integer.compare(
-                                e1.getValue().stream().mapToInt(String::length).sum(),
-                                e2.getValue().stream().mapToInt(String::length).sum()
-                        ))
+                .max(Comparator.comparingInt(x -> x.getValue().stream().mapToInt(String::length).sum()))
                 .orElse(null)
                 .getKey();
     }
@@ -71,6 +69,6 @@ public final class SecondPartTasks {
         return orders
                 .stream()
                 .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a + b));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Integer::sum));
     }
 }
