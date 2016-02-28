@@ -36,27 +36,22 @@ public final class SecondPartTasks {
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
     // какова вероятность попасть в мишень.
     public static double piDividedBy4() {
-        return DoubleStream.generate(() -> {
-            if (Math.pow(RANDOM.nextDouble() - RADIUS, 2)
-                    + Math.pow(RANDOM.nextDouble() - RADIUS, 2) < Math.pow(RADIUS, 2)) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }).limit(ITERATIONS).average().getAsDouble();
+        return DoubleStream.generate(() -> (Math.pow(RANDOM.nextDouble() - RADIUS, 2)
+                + Math.pow(RANDOM.nextDouble() - RADIUS, 2) < Math.pow(RADIUS, 2)) ? 1 : 0)
+                .limit(ITERATIONS).average().getAsDouble();
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
     // Надо вычислить, чья общая длина произведений наибольшая.
     public static String findPrinter(Map<String, List<String>> compositions) {
         return compositions.entrySet().stream().max(Comparator.comparing(
-                (x) -> x.getValue().stream().mapToInt(String::length).sum())).map(Map.Entry::getKey).orElse(null);
+                x -> x.getValue().stream().mapToInt(String::length).sum())).map(Map.Entry::getKey).orElse(null);
     }
 
     // Вы крупный поставщик продуктов. Каждая торговая сеть делает вам заказ в виде Map<Товар, Количество>.
     // Необходимо вычислить, какой товар и в каком количестве надо поставить.
     public static Map<String, Integer> calculateGlobalOrder(List<Map<String, Integer>> orders) {
-        return orders.stream().flatMap((x) -> x.entrySet().stream()).
+        return orders.stream().flatMap(x -> x.entrySet().stream()).
                 collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(Map.Entry::getValue)));
     }
 }
