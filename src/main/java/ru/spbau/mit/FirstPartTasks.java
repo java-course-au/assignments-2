@@ -1,9 +1,6 @@
 package ru.spbau.mit;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -27,7 +24,7 @@ public final class FirstPartTasks {
 
     // Список треков, отсортированный лексикографически по названию, включающий все треки альбомов из 'albums'
     public static List<String> allTracksSorted(Stream<Album> albums) {
-        return albums.flatMap((album) -> album.getTracks().stream())
+        return albums.flatMap(album -> album.getTracks().stream())
                 .map(Track::getName)
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .collect(Collectors.toList());
@@ -35,11 +32,9 @@ public final class FirstPartTasks {
 
     // Список альбомов, в которых есть хотя бы один трек с рейтингом более 95, отсортированный по названию
     public static List<Album> sortedFavorites(Stream<Album> s) {
-        return s.filter((album) -> album.getTracks()
+        return s.filter(album -> album.getTracks()
                 .stream()
-                .filter((track) -> track.getRating() > 95)
-                .collect(Collectors.toList())
-                .size() > 0)
+                .anyMatch(track -> track.getRating() > 95))
                 .sorted((a1, a2) -> a1.getName().compareTo(a2.getName()))
                 .collect(Collectors.toList());
     }
@@ -72,30 +67,20 @@ public final class FirstPartTasks {
     // (если в альбоме нет ни одного трека, считать, что максимум рейтинга в нем --- 0)
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
         return albums.collect(Collectors.minBy(
-                (a1, a2) ->
-                        a1.getTracks()
-                                .stream()
-                                .map(Track::getRating)
-                                .max(Integer::compareTo)
-                                .orElse(0)
-                                .compareTo(
-                                        a2.getTracks()
-                                                .stream()
-                                                .map(Track::getRating)
-                                                .max(Integer::compareTo)
-                                                .orElse(0))
+                Comparator.comparingInt(a -> a.getTracks()
+                        .stream()
+                        .map(Track::getRating)
+                        .max(Integer::compareTo)
+                        .orElse(0))
         ));
     }
 
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums
-                .sorted((a, b) -> b.getTracks()
+                .sorted(Comparator.comparingDouble(a -> -a.getTracks()
                         .stream()
-                        .collect(Collectors.averagingInt(Track::getRating))
-                        .compareTo(a.getTracks()
-                                .stream()
-                                .collect(Collectors.averagingInt(Track::getRating))))
+                        .collect(Collectors.averagingInt(Track::getRating))))
                 .collect(Collectors.toList());
     }
 
@@ -113,6 +98,6 @@ public final class FirstPartTasks {
 
     // Вернуть поток из объектов класса 'clazz'
     public static <R> Stream<R> filterIsInstance(Stream<?> s, Class<R> clazz) {
-        return s.filter(clazz::isInstance).map(a -> (R) a);
+        return (Stream<R>) s.filter(clazz::isInstance);
     }
 }

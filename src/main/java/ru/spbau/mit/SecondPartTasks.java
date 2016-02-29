@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -52,8 +53,7 @@ public final class SecondPartTasks {
         return compositions.entrySet()
                 .stream()
                 .collect(Collectors.maxBy(
-                        (e1, e2) -> e1.getValue().stream().collect(Collectors.joining()).length()
-                                - e2.getValue().stream().collect(Collectors.joining()).length()))
+                    Comparator.comparingInt(e -> e.getValue().stream().collect(Collectors.joining()).length())))
                 .get()
                 .getKey();
     }
