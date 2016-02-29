@@ -17,7 +17,7 @@ To dungeons deep and caverns old
 We must away ere break of day
 To seek the pale enchanted gold.
 
-The dwarves of yore made mighty spells,
+The DWARVES of yore made mighty spells,
 While hammers fell like ringing bells
 In places deep, where dark things sleep,
 In hollow halls beneath the fells.
@@ -35,13 +35,13 @@ They meshed the light of moon and sun.
 
 public class SecondPartTasksTest {
 
-    private static final String[][] texts = {
+    private static final String[][] TEXTS = {
             {"Far over the misty mountains cold",
                     "To dungeons deep and caverns old",
                     "We must away ere break of day",
                     "To seek the pale enchanted gold."},
 
-            {"The dwarves of yore made mighty spells,",
+            {"The DWARVES of yore made mighty spells,",
                     "While hammers fell like ringing bells",
                     "In places deep, where dark things sleep,",
                     "In hollow halls beneath the fells."},
@@ -67,14 +67,14 @@ public class SecondPartTasksTest {
     };
     private static final String TITLE_PREF = "secondPartTaskTestFile";
     private static final int NUM_TEXTS = 5;
-    private static final ArrayList<String> paths = new ArrayList<>();
-    private static final HashMap<String, List<String>> library = new HashMap<>();
-    private static final HashMap<String, Integer> elves = new HashMap<>();
-    private static final HashMap<String, Integer> people = new HashMap<>();
-    private static final HashMap<String, Integer> dwarves = new HashMap<>();
-    private static final HashMap<String, Integer> hobbits = new HashMap<>();
-    private static final ArrayList<Map<String, Integer>> orders = new ArrayList<>();
-    private static final HashMap<String, Integer> result = new HashMap<>();
+    private static final ArrayList<String> PATHS = new ArrayList<>();
+    private static final HashMap<String, List<String>> LIBRARY = new HashMap<>();
+    private static final HashMap<String, Integer> ELVES = new HashMap<>();
+    private static final HashMap<String, Integer> PEOPLE = new HashMap<>();
+    private static final HashMap<String, Integer> DWARVES = new HashMap<>();
+    private static final HashMap<String, Integer> HOBBITS = new HashMap<>();
+    private static final ArrayList<Map<String, Integer>> ORDERS = new ArrayList<>();
+    private static final HashMap<String, Integer> RESULT = new HashMap<>();
 
     static {
         // creating files for testing the first task
@@ -82,47 +82,47 @@ public class SecondPartTasksTest {
             String fileName = TITLE_PREF + Integer.toString(i);
             try {
                 Files.write(Paths.get(fileName),
-                        Arrays.asList(texts[i]));
+                        Arrays.asList(TEXTS[i]));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            paths.add(fileName);
+            PATHS.add(fileName);
         }
 
         // creating a map for testing the third task
         for (int i = 0; i < NUM_TEXTS; i++) {
             String authorName = TITLE_PREF + Integer.toString(i);
-            library.put(authorName, Arrays.asList(texts[i]));
+            LIBRARY.put(authorName, Arrays.asList(TEXTS[i]));
         }
 
         // creating maps for the forth test
-        elves.put("palantir", 3);
-        elves.put("bow", 10);
-        orders.add(elves);
+        ELVES.put("palantir", 3);
+        ELVES.put("bow", 10);
+        ORDERS.add(ELVES);
 
-        people.put("palantir", 4);
-        people.put("bow", 10);
-        people.put("axe", 5);
-        orders.add(people);
+        PEOPLE.put("palantir", 4);
+        PEOPLE.put("bow", 10);
+        PEOPLE.put("axe", 5);
+        ORDERS.add(PEOPLE);
 
-        dwarves.put("axe", 5);
-        orders.add(dwarves);
+        DWARVES.put("axe", 5);
+        ORDERS.add(DWARVES);
 
-        hobbits.put("blade", 1);
-        hobbits.put("bow", 10);
-        orders.add(hobbits);
+        HOBBITS.put("blade", 1);
+        HOBBITS.put("bow", 10);
+        ORDERS.add(HOBBITS);
 
-        result.put("palantir", 7);
-        result.put("blade", 1);
-        result.put("bow", 30);
-        result.put("axe", 10);
+        RESULT.put("palantir", 7);
+        RESULT.put("blade", 1);
+        RESULT.put("bow", 30);
+        RESULT.put("axe", 10);
     }
 
     @Test
     public void testFindQuotes() {
         assertEquals(
                 Arrays.asList("To seek the pale enchanted gold.", "In hollow halls beneath the fells."),
-                SecondPartTasks.findQuotes(paths, "al")
+                SecondPartTasks.findQuotes(PATHS, "al")
         );
     }
 
@@ -136,11 +136,11 @@ public class SecondPartTasksTest {
 
     @Test
     public void testFindPrinter() {
-        assertEquals(TITLE_PREF + "4", SecondPartTasks.findPrinter(library));
+        assertEquals(TITLE_PREF + "4", SecondPartTasks.findPrinter(LIBRARY));
     }
 
     @Test
     public void testCalculateGlobalOrder() {
-        assertEquals(result, SecondPartTasks.calculateGlobalOrder(orders));
+        assertEquals(RESULT, SecondPartTasks.calculateGlobalOrder(ORDERS));
     }
 }
