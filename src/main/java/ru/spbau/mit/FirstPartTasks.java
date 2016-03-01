@@ -29,14 +29,9 @@ public final class FirstPartTasks {
 
     private static final int GOOD_RATING = 95;
     public static List<Album> sortedFavorites(Stream<Album> s) {
-        return s.filter(a -> {
-            if (a.getTracks().isEmpty()) {
-                return false;
-            } else {
-                return a.getTracks()
-                        .stream().map(Track::getRating).max(Integer::compareTo).get() > GOOD_RATING;
-            }
-        }).sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
+        return s.filter(a -> a.getTracks()
+                .stream().map(Track::getRating).anyMatch(rt -> rt > GOOD_RATING)).
+                sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
     }
 
     // Сгруппировать альбомы по артистам
