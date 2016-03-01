@@ -73,24 +73,8 @@ public final class FirstPartTasks {
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums.sorted(
-                (a, b) -> {
-                    int sum1 = a.getTracks().stream().map(Track::getRating).reduce(0, (u, v) -> u + v),
-                            sum2 = b.getTracks().stream().map(Track::getRating).reduce(0, (u, v) -> u + v),
-                            cnt1 = a.getTracks().size(), cnt2 = b.getTracks().size();
-                    if (cnt1 == 0) {
-                        ++cnt1;
-                    }
-                    if (cnt2 == 0) {
-                        ++cnt2;
-                    }
-                    if (sum1 * cnt2 < sum2 * cnt1) {
-                        return 1;
-                    } else if (sum1 * cnt2 == sum2 * cnt1) {
-                        return 0;
-                    } else {
-                        return -1;
-                    }
-                }
+                Comparator.comparingDouble(a -> -a.getTracks().stream()
+                        .mapToInt(Track::getRating).average().getAsDouble())
         ).collect(Collectors.toList());
     }
 
