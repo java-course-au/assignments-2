@@ -3,10 +3,13 @@ package ru.spbau.mit;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.function.Function;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class SecondPartTasks {
 
@@ -31,25 +34,12 @@ public final class SecondPartTasks {
     // java.util.Random и посчитать, какова вероятность попасть в мишень.
 
     private static final int COUNT_REP = 1000000;
-    public static double piDividedBy4() {
-        return new Random().doubles(COUNT_REP).boxed().map(new Function<Double, ArrayList<Double>>() {
-            private Double firstArg;
+    private static final Random RNG = new Random(179);
 
-            @Override
-            public ArrayList<Double> apply(Double aDouble) {
-                if (firstArg != null) {
-                    ArrayList<Double> ar = new ArrayList<Double>();
-                    ar.add(firstArg);
-                    ar.add(aDouble);
-                    firstArg = null;
-                    return ar;
-                } else {
-                    firstArg = aDouble;
-                    return null;
-                }
-            }
-        }).filter(a -> a != null)
-                .filter(a -> a.get(0) * a.get(0) + a.get(1) * a.get(1) <= 1).count() * 2.0 / COUNT_REP;
+    public static double piDividedBy4() {
+        return Stream.generate(() -> Math.pow(RNG.nextDouble(), 2.) + Math.pow(RNG.nextDouble(), 2.))
+                .limit(COUNT_REP)
+                .filter(a -> a <= 1.).count()*1.0 / COUNT_REP;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
