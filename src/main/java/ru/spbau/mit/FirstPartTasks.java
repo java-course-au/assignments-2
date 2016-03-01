@@ -47,7 +47,7 @@ public final class FirstPartTasks {
                         Album::getArtist,
                         Collectors.mapping(
                                 Album::getName,
-                                Collectors.toCollection(ArrayList<String>::new)
+                                Collectors.toList()
                         )
                 )
         );
