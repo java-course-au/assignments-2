@@ -31,7 +31,7 @@ public final class FirstPartTasks {
     public static List<Album> sortedFavorites(Stream<Album> s) {
         return s.filter(a -> a.getTracks()
                 .stream().map(Track::getRating).anyMatch(rt -> rt > GOOD_RATING)).
-                sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
+                sorted(Comparator.comparing(Album::getName)).collect(Collectors.toList());
     }
 
     // Сгруппировать альбомы по артистам
