@@ -65,26 +65,9 @@ public final class FirstPartTasks {
     // Альбом в котором максимум рейтинга минимален
     // (если в альбоме нет ни одного трека, считать, что максимум рейтинга в нем --- 0)
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
-        return albums.min((a, b) -> {
-            int val1, val2;
-            if (a.getTracks().isEmpty()) {
-                val1 = 0;
-            } else {
-                val1 = a.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
-            }
-            if (b.getTracks().isEmpty()) {
-                val2 = 0;
-            } else {
-                val2 = b.getTracks().stream().map(t -> t.getRating()).max(Integer::compareTo).get();
-            }
-            if (val1 < val2) {
-                return -1;
-            } else if (val1 == val2) {
-                return 0;
-            } else {
-                return 1;
-            }
-        });
+        return albums.min(
+            Comparator.comparingInt(a -> a.getTracks().stream().map(Track::getRating).max(Integer::compareTo).get())
+        );
     }
 
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
