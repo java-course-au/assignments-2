@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class SecondPartTasks {
@@ -56,9 +57,9 @@ public final class SecondPartTasks {
     public static String findPrinter(Map<String, List<String>> compositions) {
         return compositions.entrySet().stream()
                 .collect(
-                        () -> new HashMap<String, Integer>(),
+                        (Supplier<HashMap<String, Integer>>) HashMap::new,
                         (a, b) -> a.put(b.getKey(), b.getValue().stream().collect(Collectors.joining()).length()),
-                        (a, b) -> a.putAll(b))
+                        HashMap::putAll)
                 .entrySet().stream().max((a, b) -> a.getValue().compareTo(b.getValue())).get().getKey();
     }
 
@@ -67,9 +68,9 @@ public final class SecondPartTasks {
     public static Map<String, Integer> calculateGlobalOrder(List<Map<String, Integer>> orders) {
         return orders.stream().flatMap(a -> a.entrySet().stream()).collect(
                 Collectors.groupingBy(
-                        a -> a.getKey(),
+                        Map.Entry::getKey,
                         Collectors.mapping(
-                                a -> a.getValue(),
+                                Map.Entry::getValue,
                                 Collectors.reducing(0, (c, d) -> c + d)
                         )
                 )

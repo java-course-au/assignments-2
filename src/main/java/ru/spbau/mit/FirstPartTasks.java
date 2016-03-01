@@ -11,17 +11,17 @@ public final class FirstPartTasks {
 
     // Список названий альбомов
     public static List<String> allNames(Stream<Album> albums) {
-        return albums.map(a -> a.getName()).collect(Collectors.toList());
+        return albums.map(Album::getName).collect(Collectors.toList());
     }
 
     // Список названий альбомов, отсортированный лексикографически по названию
     public static List<String> allNamesSorted(Stream<Album> albums) {
-        return albums.map(a -> a.getName()).sorted().collect(Collectors.toList());
+        return albums.map(Album::getName).sorted().collect(Collectors.toList());
     }
 
     // Список треков, отсортированный лексикографически по названию, включающий все треки альбомов из 'albums'
     public static List<String> allTracksSorted(Stream<Album> albums) {
-        return albums.flatMap(a -> a.getTracks().stream()).map(a -> a.getName())
+        return albums.flatMap(a -> a.getTracks().stream()).map(Track::getName)
                 .sorted().collect(Collectors.toList());
     }
 
@@ -34,7 +34,7 @@ public final class FirstPartTasks {
                 return false;
             } else {
                 return a.getTracks()
-                        .stream().map(t -> t.getRating()).max(Integer::compareTo).get() > GOOD_RATING;
+                        .stream().map(Track::getRating).max(Integer::compareTo).get() > GOOD_RATING;
             }
         }).sorted((a, b) -> a.getName().compareTo(b.getName())).collect(Collectors.toList());
     }
@@ -96,8 +96,8 @@ public final class FirstPartTasks {
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums.sorted(
                 (a, b) -> {
-                    int sum1 = a.getTracks().stream().map(t -> t.getRating()).reduce(0, (u, v) -> u + v),
-                            sum2 = b.getTracks().stream().map(t -> t.getRating()).reduce(0, (u, v) -> u + v),
+                    int sum1 = a.getTracks().stream().map(Track::getRating).reduce(0, (u, v) -> u + v),
+                            sum2 = b.getTracks().stream().map(Track::getRating).reduce(0, (u, v) -> u + v),
                             cnt1 = a.getTracks().size(), cnt2 = b.getTracks().size();
                     if (cnt1 == 0) {
                         ++cnt1;
@@ -130,6 +130,6 @@ public final class FirstPartTasks {
 
     // Вернуть поток из объектов класса 'clazz'
     public static <R> Stream<R> filterIsInstance(Stream<?> s, Class<R> clazz) {
-        return ((Stream<R>) s.filter(a -> clazz.isInstance(a)));
+        return ((Stream<R>) s.filter(clazz::isInstance));
     }
 }
