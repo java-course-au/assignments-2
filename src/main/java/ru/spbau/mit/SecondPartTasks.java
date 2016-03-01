@@ -39,7 +39,7 @@ public final class SecondPartTasks {
     public static double piDividedBy4() {
         return Stream.generate(() -> Math.pow(RNG.nextDouble(), 2.) + Math.pow(RNG.nextDouble(), 2.))
                 .limit(COUNT_REP)
-                .filter(a -> a <= 1.).count()*1.0 / COUNT_REP;
+                .filter(a -> a <= 1.).count() * 1.0 / COUNT_REP;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.

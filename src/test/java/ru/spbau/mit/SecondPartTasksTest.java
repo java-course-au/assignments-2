@@ -96,7 +96,8 @@ public class SecondPartTasksTest {
         assertEquals(res, calculateGlobalOrder(orders));
     }
 
-    private void putOrder(List<Map<String, Integer>> orders, HashMap<String, Integer> res, int i, String key, int value) {
+    private void putOrder(List<Map<String, Integer>> orders, HashMap<String, Integer> res,
+                          int i, String key, int value) {
         orders.get(i).put(key, value);
         if (res.containsKey(key)) {
             res.put(key, res.get(key) + value);
