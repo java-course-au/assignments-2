@@ -69,9 +69,8 @@ public final class SecondPartTasks {
         return orders.stream().flatMap(a -> a.entrySet().stream()).collect(
                 Collectors.groupingBy(
                         Map.Entry::getKey,
-                        Collectors.mapping(
-                                Map.Entry::getValue,
-                                Collectors.reducing(0, (c, d) -> c + d)
+                        Collectors.summingInt(
+                                Map.Entry::getValue
                         )
                 )
         );
