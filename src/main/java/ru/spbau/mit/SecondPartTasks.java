@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,8 +30,9 @@ public final class SecondPartTasks {
     // Стрелок атакует мишень и каждый раз попадает в произвольную точку квадрата.
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
     // какова вероятность попасть в мишень.
+    private static final int SHOOTS_COUNT = (int) 1e6;
+
     public static double piDividedBy4() {
-        final int SHOOTS_COUNT = (int) 1e6;
         Random r = new Random(17);
         class Point {
             private double x, y;

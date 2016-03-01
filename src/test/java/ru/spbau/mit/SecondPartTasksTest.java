@@ -11,11 +11,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static junitx.framework.Assert.assertEquals;
-
 import static ru.spbau.mit.SecondPartTasks.*;
 
 public class SecondPartTasksTest {
@@ -55,9 +53,10 @@ public class SecondPartTasksTest {
         );
     }
 
+    private static final double EPSILON = 1e-2;
+
     @Test
     public void testPiDividedBy4() {
-        final double EPSILON = 1e-2;
         assertEquals(Math.PI / 4, piDividedBy4(), EPSILON);
     }
 

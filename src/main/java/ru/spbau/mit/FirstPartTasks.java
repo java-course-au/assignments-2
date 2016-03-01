@@ -2,7 +2,6 @@ package ru.spbau.mit;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,9 +27,11 @@ public final class FirstPartTasks {
     }
 
     // Список альбомов, в которых есть хотя бы один трек с рейтингом более 95, отсортированный по названию
+    private static final int MIN_RATING = 95;
+
     public static List<Album> sortedFavorites(Stream<Album> albums) {
-        final int MIN_RATING = 95;
-        return albums.filter(album -> album.getTracks().stream().anyMatch(track -> track.getRating() > MIN_RATING)).
+        return albums.filter(album -> album.getTracks().stream().
+                anyMatch(track -> track.getRating() > MIN_RATING)).
                 sorted(Comparator.comparing(Album::getName)).collect(Collectors.toList());
     }
 
@@ -41,7 +42,8 @@ public final class FirstPartTasks {
 
     // Сгруппировать альбомы по артистам (в качестве значения вместо объекта 'Album' использовать его имя)
     public static Map<Artist, List<String>> groupByArtistMapName(Stream<Album> albums) {
-        return albums.collect(Collectors.groupingBy(Album::getArtist, Collectors.mapping(Album::getName, Collectors.toList())));
+        return albums.collect(Collectors.groupingBy(Album::getArtist,
+                Collectors.mapping(Album::getName, Collectors.toList())));
     }
 
     // Число повторяющихся альбомов в потоке
@@ -60,7 +62,8 @@ public final class FirstPartTasks {
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums.sorted(
-                Comparator.comparing((Album album) -> album.getTracks().stream().mapToInt(Track::getRating).average().orElse(0)).reversed()
+                Comparator.comparing((Album album) -> album.getTracks().stream().
+                        mapToInt(Track::getRating).average().orElse(0)).reversed()
         ).collect(Collectors.toList());
     }
 
