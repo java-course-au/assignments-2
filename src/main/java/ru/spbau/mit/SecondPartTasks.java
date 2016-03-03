@@ -1,11 +1,11 @@
 package ru.spbau.mit;
 
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 public final class SecondPartTasks {
@@ -37,11 +37,12 @@ public final class SecondPartTasks {
     public static double piDividedBy4() {
         Random random = new Random();
 
-        return Stream.generate(() -> new Point2D.Double(random.nextDouble() - RAD, random.nextDouble() - RAD))
-                     .limit(SHOTS_NUMBER)
-                     .filter(p -> p.x * p.x + p.y * p.y < RAD2)
-                     .count()
-                / (double) SHOTS_NUMBER;
+        return DoubleStream.generate(() ->
+                Math.pow(random.nextDouble() - RAD, 2) + Math.pow(random.nextDouble() - RAD, 2))
+                           .limit(SHOTS_NUMBER)
+                           .filter(d2 -> d2 < RAD2)
+                           .count()
+                    / (double) SHOTS_NUMBER;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
