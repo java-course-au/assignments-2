@@ -38,7 +38,7 @@ public final class SecondPartTasks {
         Random random = new Random();
 
         return DoubleStream.generate(() ->
-                Math.pow(random.nextDouble() - RAD, 2) + Math.pow(random.nextDouble() - RAD, 2))
+                                Math.pow(random.nextDouble() - RAD, 2) + Math.pow(random.nextDouble() - RAD, 2))
                            .limit(SHOTS_NUMBER)
                            .filter(d2 -> d2 < RAD2)
                            .count()
