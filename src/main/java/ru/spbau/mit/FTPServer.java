@@ -1,5 +1,6 @@
 package ru.spbau.mit;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,46 +9,31 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
  * Created by ldvsoft on 08.03.16.
  */
 public class FTPServer implements AutoCloseable {
-    private static final int THREADS = 4;
-
     private ServerSocket serverSocket;
-    private ExecutorService executor;
-    private volatile boolean toWork = true;
 
     public FTPServer(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
-        executor = Executors.newFixedThreadPool(THREADS);
-        for (int i = 0; i != THREADS; i++) {
-            executor.execute(this::work);
+        synchronized (this) {
+            serverSocket = new ServerSocket(port);
         }
+        new Thread(this::work).start();
     }
 
-    public void close() {
-        if (!toWork) {
-            return;
+    public synchronized void close() {
+        try {
+            serverSocket.close();
+        } catch (IOException ignored) {
         }
-
-        synchronized (this) {
-            toWork = false;
-            try {
-                serverSocket.close();
-            } catch (IOException ignored) {
-            }
-        }
-        executor.shutdown();
     }
 
     private Socket accept() throws IOException {
         synchronized (this) {
-            if (!toWork) {
+            if (serverSocket.isClosed()) {
                 return null;
             }
         }
@@ -56,29 +42,46 @@ public class FTPServer implements AutoCloseable {
 
     private void work() {
         while (true) {
-            try (Socket socket = accept()) {
+            try {
+                Socket socket = accept();
                 if (socket == null) {
                     return;
                 }
-
-                try (FTPConnection connection = new FTPConnection(socket)) {
-                    String path;
-                    int action = connection.readAction();
-                    switch (action) {
-                        case FTPConnection.FTP_ACTION_LIST:
-                            path = connection.readActionList();
-                            doList(path, connection);
-                            break;
-                        case FTPConnection.FTP_ACTION_GET:
-                            path = connection.readActionGet();
-                            doGet(path, connection);
-                        default:
-                            System.err.printf("Wrong action from client: %d\n", action);
-                            break;
-                    }
-                }
-            } catch (IOException ignored) {
+                new Thread(() -> handleConnection(socket)).start();
+            } catch (IOException e) {
+                break;
             }
+        }
+    }
+
+    private void handleConnection(Socket socket) {
+        try (FTPConnection connection = new FTPConnection(socket)) {
+            boolean isOpen = true;
+            while (isOpen) {
+                String path;
+                int action;
+                try {
+                    action = connection.readAction();
+                } catch (EOFException ignored) {
+                    break;
+                }
+                switch (action) {
+                    case FTPConnection.FTP_ACTION_LIST:
+                        path = connection.readActionList();
+                        doList(path, connection);
+                        break;
+                    case FTPConnection.FTP_ACTION_GET:
+                        path = connection.readActionGet();
+                        doGet(path, connection);
+                        break;
+                    default:
+                        System.err.printf("Wrong action from client: %d\n", action);
+                        isOpen = false;
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

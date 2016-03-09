@@ -30,9 +30,9 @@ public class TestFTP {
     public void testList() throws IOException {
         try (
                 @SuppressWarnings("unused")
-                FTPServer server = new FTPServer(PORT);
+                FTPServer server = new FTPServer(PORT + 1);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 1)
         ) {
-            FTPClient client = new FTPClient(LOCALHOST, PORT);
             List<FTPFileEntry> list1 = client.list(LOCALHOST);
             assertEquals(new ArrayList<>(), list1);
 
@@ -46,9 +46,9 @@ public class TestFTP {
         Path tmpFile = Files.createTempFile("", "");
         try (
                 @SuppressWarnings("unused")
-                FTPServer server = new FTPServer(PORT);
+                FTPServer server = new FTPServer(PORT + 2);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 2)
         ) {
-            FTPClient client = new FTPClient(LOCALHOST, PORT);
 
             try (OutputStream os = Files.newOutputStream(tmpFile)) {
                 client.get(LOCALHOST, os);

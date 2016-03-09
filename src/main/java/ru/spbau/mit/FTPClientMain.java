@@ -45,8 +45,7 @@ public abstract class FTPClientMain {
         }
         int action = ACTIONS.get(actionString);
 
-        try {
-            FTPClient client = new FTPClient(host, port);
+        try (FTPClient client = new FTPClient(host, port)) {
             String path, outputFile;
             switch (action) {
                 case FTPConnection.FTP_ACTION_LIST:
