@@ -43,12 +43,13 @@ public class TestFTP {
 
     @Test
     public void testGet() throws IOException {
-        Path tmpFile = Files.createTempFile("", "");
+        Path tmpFile = null;
         try (
                 @SuppressWarnings("unused")
                 FTPServer server = new FTPServer(PORT + 2);
                 FTPClient client = new FTPClient(LOCALHOST, PORT + 2)
         ) {
+            tmpFile = Files.createTempFile("", "");
 
             try (OutputStream os = Files.newOutputStream(tmpFile)) {
                 client.get(LOCALHOST, os);
@@ -59,6 +60,11 @@ public class TestFTP {
                 client.get(CHECKSTYLE_FILE, os);
             }
             assertTrue(FileUtils.contentEquals(tmpFile.toFile(), new File(CHECKSTYLE_FILE)));
+        } catch (IOException e) {
+            if (tmpFile != null && Files.exists(tmpFile)) {
+                Files.delete(tmpFile);
+            }
+            throw e;
         }
     }
 }
