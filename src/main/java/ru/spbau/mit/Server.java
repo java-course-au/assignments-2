@@ -3,6 +3,7 @@ package ru.spbau.mit;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * Created by olga on 13.03.16.
@@ -41,7 +42,12 @@ public class Server {
         if (serverSocket.isClosed()) {
             return null;
         }
-        return serverSocket.accept();
+        try {
+            return serverSocket.accept();
+        } catch (SocketException e) {
+            return null;
+        }
+
     }
 
     private void catchSocket() throws IOException {
