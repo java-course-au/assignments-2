@@ -6,15 +6,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
 public class Tests {
-    private static final int PORT = 12345;
+    private static final int MAX_PORT = 20000;
+    private static final int MIN_PORT = 10000;
     private static final int CNT_DIR = 4;
 
     @Test
@@ -42,10 +45,23 @@ public class Tests {
             }
         };
 
-        Server server = new Server(PORT);
+        int port = 0;
+        Random rnd = new Random();
+        port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+
+        Server server;
+        while (true) {
+            try {
+                server = new Server(port);
+                break;
+            } catch (BindException e) {
+                port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+            }
+        }
+
         server.start();
 
-        Client client = new Client("localhost", PORT);
+        Client client = new Client("localhost", port);
 
         try {
             assertEquals(client.get(path.toString() + File.separator + "tmp", output), fileString.length());
@@ -69,11 +85,24 @@ public class Tests {
             (new File(path.toString() + File.separator + fileName[i])).createNewFile();
         }
 
-        Server server = new Server(PORT);
+        int port = 0;
+        Random rnd = new Random();
+        port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+
+        Server server;
+        while (true) {
+            try {
+                server = new Server(port);
+                break;
+            } catch (BindException e) {
+                port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+            }
+        }
+
         server.start();
 
+        Client client = new Client("localhost", port);
 
-        Client client = new Client("localhost", PORT);
         try {
             ArrayList<Client.FileEntry> ls = client.list(path.toString());
             assertEquals(ls.size(), fileName.length);

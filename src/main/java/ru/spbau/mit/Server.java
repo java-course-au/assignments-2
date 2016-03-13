@@ -31,16 +31,19 @@ public class Server {
         thread.start();
     }
 
-    public void stop() {
+    public synchronized void stop() {
         try {
             serverSocket.close();
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    private synchronized Socket accept() throws IOException {
-        if (serverSocket.isClosed()) {
-            return null;
+    private Socket accept() throws IOException {
+        synchronized (this) {
+            if (serverSocket.isClosed()) {
+                return null;
+            }
         }
         try {
             return serverSocket.accept();
