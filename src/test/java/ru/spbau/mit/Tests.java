@@ -14,6 +14,8 @@ import java.util.Comparator;
 import static org.junit.Assert.assertEquals;
 
 public class Tests {
+    private static final int PORT = 12345;
+
     @Test
     public void testGet() throws IOException {
         Path path = Files.createTempDirectory("FTP");
@@ -39,10 +41,10 @@ public class Tests {
             }
         };
 
-        Server server = new Server(12345);
+        Server server = new Server(PORT);
         server.start();
 
-        Client client = new Client("localhost", 12345);
+        Client client = new Client("localhost", PORT);
 
         try {
             assertEquals(client.get(path.toString() + File.separator + "tmp", output), fileString.length());
@@ -56,26 +58,25 @@ public class Tests {
 
     @Test
     public void testList() throws IOException {
+        int cntDir = 4;
         String[] fileName = new String[]{"dir1", "dir2", "dir3", "dir4", "file1", "file2", "file3", "file4"};
 
         Path path = Files.createTempDirectory("FTP");
-        (new File(path.toString() + File.separator + fileName[0])).mkdir();
-        (new File(path.toString() + File.separator + fileName[1])).mkdir();
-        (new File(path.toString() + File.separator + fileName[2])).mkdir();
-        (new File(path.toString() + File.separator + fileName[3])).mkdir();
-        (new File(path.toString() + File.separator + fileName[4])).createNewFile();
-        (new File(path.toString() + File.separator + fileName[5])).createNewFile();
-        (new File(path.toString() + File.separator + fileName[6])).createNewFile();
-        (new File(path.toString() + File.separator + fileName[7])).createNewFile();
+        for (int i = 0; i < cntDir; ++i) {
+            (new File(path.toString() + File.separator + fileName[i])).mkdir();
+        }
+        for (int i = cntDir; i < fileName.length; ++i) {
+            (new File(path.toString() + File.separator + fileName[i])).createNewFile();
+        }
 
-        Server server = new Server(12345);
+        Server server = new Server(PORT);
         server.start();
 
 
-        Client client = new Client("localhost", 12345);
+        Client client = new Client("localhost", PORT);
         try {
             ArrayList<Client.FileEntry> ls = client.list(path.toString());
-            assertEquals(ls.size(), 8);
+            assertEquals(ls.size(), fileName.length);
             ls.sort(new Comparator<Client.FileEntry>() {
                 @Override
                 public int compare(Client.FileEntry o1, Client.FileEntry o2) {
@@ -83,16 +84,16 @@ public class Tests {
                 }
             });
 
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < cntDir; ++i) {
                 assertEquals(ls.get(i).getDir(), true);
             }
 
 
-            for (int i = 4; i < 8; ++i) {
+            for (int i = cntDir; i < fileName.length; ++i) {
                 assertEquals(ls.get(i).getDir(), false);
             }
 
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < fileName.length; ++i) {
                 assertEquals(ls.get(i).getName(), fileName[i]);
             }
 
