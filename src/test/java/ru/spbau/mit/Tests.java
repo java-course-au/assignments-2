@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 public class Tests {
     private static final int PORT = 12345;
+    private static final int CNT_DIR = 4;
 
     @Test
     public void testGet() throws IOException {
@@ -58,14 +59,13 @@ public class Tests {
 
     @Test
     public void testList() throws IOException {
-        int cntDir = 4;
         String[] fileName = new String[]{"dir1", "dir2", "dir3", "dir4", "file1", "file2", "file3", "file4"};
 
         Path path = Files.createTempDirectory("FTP");
-        for (int i = 0; i < cntDir; ++i) {
+        for (int i = 0; i < CNT_DIR; ++i) {
             (new File(path.toString() + File.separator + fileName[i])).mkdir();
         }
-        for (int i = cntDir; i < fileName.length; ++i) {
+        for (int i = CNT_DIR; i < fileName.length; ++i) {
             (new File(path.toString() + File.separator + fileName[i])).createNewFile();
         }
 
@@ -84,12 +84,12 @@ public class Tests {
                 }
             });
 
-            for (int i = 0; i < cntDir; ++i) {
+            for (int i = 0; i < CNT_DIR; ++i) {
                 assertEquals(ls.get(i).getDir(), true);
             }
 
 
-            for (int i = cntDir; i < fileName.length; ++i) {
+            for (int i = CNT_DIR; i < fileName.length; ++i) {
                 assertEquals(ls.get(i).getDir(), false);
             }
 
