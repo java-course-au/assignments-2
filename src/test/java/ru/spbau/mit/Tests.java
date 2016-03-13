@@ -47,7 +47,7 @@ public class Tests {
 
         int port = 0;
         Random rnd = new Random();
-        port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+        port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
 
         Server server;
         while (true) {
@@ -55,7 +55,7 @@ public class Tests {
                 server = new Server(port);
                 break;
             } catch (BindException e) {
-                port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+                port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
             }
         }
 
@@ -87,7 +87,7 @@ public class Tests {
 
         int port = 0;
         Random rnd = new Random();
-        port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+        port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
 
         Server server;
         while (true) {
@@ -95,7 +95,7 @@ public class Tests {
                 server = new Server(port);
                 break;
             } catch (BindException e) {
-                port = rnd.nextInt(MAX_PORT -MIN_PORT) + MIN_PORT;
+                port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
             }
         }
 
