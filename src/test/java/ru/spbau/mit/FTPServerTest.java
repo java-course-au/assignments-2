@@ -49,12 +49,12 @@ public class FTPServerTest {
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
-            Files.write(file, Arrays.asList(file.toString()));
+            byte[] a = {0};
+            Files.write(file, a);
             PATHS.put(file.toString(), false);
         }
         return dir.toString();
     }
-
 
     @Test
     public void testForFun() throws IOException {
@@ -92,6 +92,7 @@ public class FTPServerTest {
 
         assertEquals(PATHS,
                 ((FTPClient.ListResponse)client.makeRequest(FTPClient.LIST, createTestDir(), null)).filesList);
+        client.stop();
         server.tearDown();
     }
 
@@ -99,11 +100,17 @@ public class FTPServerTest {
     public void testGetFileContent () throws IOException, InterruptedException {
         FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
         FTPClient client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
+        createTestDir();
         for(Map.Entry<String, Boolean> entry: PATHS.entrySet()) {
-            File resFile = Files.createTempFile("get_response", "", null).toFile();
+            File resFile = Files.createTempFile("get_response", "").toFile();
             client.makeRequest(FTPClient.GET, entry.getKey(), resFile);
-            assertTrue(FileUtils.contentEquals(resFile, new File(entry.getKey())));
+            DataInputStream input = new DataInputStream(new FileInputStream(resFile));
+            input.readInt();
+            byte[] response = new byte[1];
+            input.read(response);
+            assertEquals((byte)0, response[0]);
         }
+        client.stop();
         server.tearDown();
     }
 

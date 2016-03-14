@@ -23,17 +23,12 @@ public class FTPServer {
         workThread = new Thread(() -> {
             while(!Thread.interrupted()) {
                 try {
-                    System.err.println("ACCEPTING\n");
                     Socket clientSocket = serverSocket.accept();
-                    System.err.println("ACCEPTED\n");
                     processClient(clientSocket);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.err.println("One more happy client is successfully processed!");
-                Logger.getAnonymousLogger().info("meow");
             }
-            System.err.println("Tschuess!");
         });
         workThread.start();
     }
@@ -46,28 +41,18 @@ public class FTPServer {
 
         try {
             while (true) {
-                System.err.println("while true");
                 int requestType = input.readInt();
-                System.err.println("read int");
                 String path = input.readUTF();
-                System.err.println("read utf");
 
                 if (requestType == LIST) {
-                    System.err.println("this is list");
                     list(output, path);
-                    System.err.println("this was list");
                 } else if (requestType == GET) {
-                    System.err.println("this is get");
                     get(output, path);
-                    System.err.println("this was get");
                 }
             }
         } catch (IOException e) {
-            System.err.println("after while(true)");
             clientSocket.close();
         }
-
-        System.err.println("leaving process client");
     }
 
     private static void list(DataOutputStream output, String path) throws IOException {
@@ -92,12 +77,13 @@ public class FTPServer {
     private static void get(DataOutputStream output, String path) throws IOException {
         Path filePath = Paths.get(path);
         if (Files.notExists(filePath)) {
-            output.writeLong((long) NOT_EXISTS);
+            output.writeInt(NOT_EXISTS);
             output.flush();
             return;
         }
 
-        output.writeLong(Files.size(filePath));
+        int a = (int)Files.size(filePath);
+        output.writeInt(a);
         output.write(Files.readAllBytes(filePath));
         output.flush();
     }

@@ -62,8 +62,6 @@ public class FTPClient {
     }
 
     public void stop() throws IOException {
-        clientSocket.shutdownInput();
-        clientSocket.shutdownOutput();
         clientSocket.close();
     }
 
