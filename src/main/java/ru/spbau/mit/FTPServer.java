@@ -1,10 +1,14 @@
 package ru.spbau.mit;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 public class FTPServer {
@@ -17,42 +21,20 @@ public class FTPServer {
     private int port;
     private Thread workThread;
 
-    public FTPServer (int portNumber) throws IOException {
+    public FTPServer(int portNumber) throws IOException {
         port = portNumber;
         serverSocket = new ServerSocket(port);
         workThread = new Thread(() -> {
-            while(!Thread.interrupted()) {
+            while (!Thread.interrupted()) {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     processClient(clientSocket);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Logger.getAnonymousLogger().info("Connection closed");
                 }
             }
         });
         workThread.start();
-    }
-
-    private void processClient(Socket clientSocket) throws IOException {
-//        Socket clientSocket = serverSocket.accept();
-
-        DataInputStream input = new DataInputStream(clientSocket.getInputStream());
-        DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
-
-        try {
-            while (true) {
-                int requestType = input.readInt();
-                String path = input.readUTF();
-
-                if (requestType == LIST) {
-                    list(output, path);
-                } else if (requestType == GET) {
-                    get(output, path);
-                }
-            }
-        } catch (IOException e) {
-            clientSocket.close();
-        }
     }
 
     private static void list(DataOutputStream output, String path) throws IOException {
@@ -82,13 +64,33 @@ public class FTPServer {
             return;
         }
 
-        int a = (int)Files.size(filePath);
+        int a = (int) Files.size(filePath);
         output.writeInt(a);
         output.write(Files.readAllBytes(filePath));
         output.flush();
     }
 
-    public synchronized void tearDown () throws InterruptedException, IOException {
+    private void processClient(Socket clientSocket) throws IOException {
+        DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+        DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
+
+        try {
+            while (true) {
+                int requestType = input.readInt();
+                String path = input.readUTF();
+
+                if (requestType == LIST) {
+                    list(output, path);
+                } else if (requestType == GET) {
+                    get(output, path);
+                }
+            }
+        } catch (IOException e) {
+            clientSocket.close();
+        }
+    }
+
+    public synchronized void tearDown() throws InterruptedException, IOException {
         workThread.interrupt();
         serverSocket.close();
         workThread.join();

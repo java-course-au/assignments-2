@@ -4,7 +4,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.HashMap;
 
 public class FTPClient {
@@ -12,19 +11,27 @@ public class FTPClient {
     public static final int LIST = 1;
     public static final int GET = 2;
     public static class ListResponse {
-        public int size;
-        public HashMap<String, Boolean> filesList = new HashMap<>();
+        public int getSize() {
+            return size;
+        }
 
-        public ListResponse (DataInputStream input) throws IOException {
+        private int size;
+
+        public HashMap<String, Boolean> getFilesList() {
+            return filesList;
+        }
+
+        private HashMap<String, Boolean> filesList = new HashMap<>();
+
+        public ListResponse(DataInputStream input) throws IOException {
             size = input.readInt();
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 String name = input.readUTF();
                 Boolean isDir = input.readBoolean();
                 filesList.put(name, isDir);
             }
         }
     }
-    private static final int pageSize = 4096;
 
     private final String host;
     private final int port;
@@ -43,9 +50,9 @@ public class FTPClient {
         output.writeUTF(requestBody);
         output.flush();
 
-        if(requestType == LIST) {
+        if (requestType == LIST) {
             return new ListResponse(input);
-        } else if(requestType == GET) {
+        } else if (requestType == GET) {
             processGetRequest(input, new FileOutputStream(whereToSave));
             return  whereToSave;
         }
