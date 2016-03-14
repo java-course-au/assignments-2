@@ -13,7 +13,7 @@ public class FTPClient {
     public static final int GET = 2;
     public static class ListResponse {
         public int size;
-        public HashMap<String, Boolean> filesList = null;
+        public HashMap<String, Boolean> filesList = new HashMap<>();
 
         public ListResponse (DataInputStream input) throws IOException {
             size = input.readInt();
@@ -39,7 +39,7 @@ public class FTPClient {
         DataInputStream input = new DataInputStream(clientSocket.getInputStream());
         DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 
-        output.write(requestType);
+        output.writeInt(requestType);
         output.writeUTF(requestBody);
         output.flush();
 
@@ -55,8 +55,9 @@ public class FTPClient {
 
     private void processGetRequest(DataInputStream input, OutputStream output) throws IOException {
         int size = input.readInt();
-        output.write(size);
-        IOUtils.copyLarge(input, output, 0, size);
+        DataOutputStream out = new DataOutputStream(output);
+        out.writeInt(size);
+        IOUtils.copyLarge(input, out, 0, size);
         output.flush();
     }
 
