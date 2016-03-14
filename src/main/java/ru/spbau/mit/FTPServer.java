@@ -16,22 +16,20 @@ import java.util.stream.Collectors;
 
 public class FTPServer implements Server {
     private ServerSocket serverSocket;
-    private int port;
     private String rootPath;
 
     public FTPServer(int port, String rootPath) {
-        this.port = port;
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.rootPath = rootPath;
     }
 
     @Override
     public void start() {
         new Thread(() -> {
-            try {
-                serverSocket = new ServerSocket(port);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             while (true) {
                 if (serverSocket == null || serverSocket.isClosed()) {
                     break;
