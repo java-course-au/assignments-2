@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -16,12 +18,14 @@ import java.util.stream.Collectors;
  */
 public class FTPServer implements AutoCloseable {
     private ServerSocket serverSocket;
+    private ExecutorService executorService;
 
     public FTPServer(int port) throws IOException {
         synchronized (this) {
             serverSocket = new ServerSocket(port);
         }
-        new Thread(this::work).start();
+        executorService = Executors.newCachedThreadPool();
+        executorService.submit((Runnable) this::work);
     }
 
     public synchronized void close() {
@@ -47,7 +51,7 @@ public class FTPServer implements AutoCloseable {
                 if (socket == null) {
                     return;
                 }
-                new Thread(() -> handleConnection(socket)).start();
+                executorService.submit(() -> handleConnection(socket));
             } catch (IOException e) {
                 break;
             }
