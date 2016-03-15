@@ -19,11 +19,6 @@ public class FTPServerTest {
     //TODO
     //@Rule
     //  public final TeporaryFolder folder = new TemporaryFolder();
-    
-    
-    //assertThat
-    //1 параметр -- произвольный объект
-    //2          -- предикат
 
     private static String createTestDir() throws IOException {
         PATHS.clear();
