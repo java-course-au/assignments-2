@@ -5,6 +5,5 @@ import org.junit.Test;
 public class StubTest {
     @Test
     public void testSettings() {
-        Main.main(null);
     }
 }
