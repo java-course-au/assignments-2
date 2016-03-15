@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 
 public class FTPServer {
@@ -12,6 +13,11 @@ public class FTPServer {
 
     private void listOperation(String path) throws IOException {
         final File[] listFiles = new File(path).listFiles();
+        if (listFiles == null) {
+            dataOutputStream.writeInt(0);
+            return;
+        }
+
         dataOutputStream.writeInt(listFiles.length);
         for (final File fileEntry : listFiles) {
             dataOutputStream.writeUTF(fileEntry.getName());
@@ -20,7 +26,14 @@ public class FTPServer {
     }
 
     private void getOperation(String path) throws IOException {
-        final byte[] byteArray = Files.readAllBytes(Paths.get(path));
+        final byte[] byteArray;
+        try {
+            byteArray = Files.readAllBytes(Paths.get(path));
+        } catch (NoSuchFileException e) {
+            dataOutputStream.writeLong(0);
+            return;
+        }
+
         dataOutputStream.writeLong(byteArray.length);
         dataOutputStream.write(byteArray);
     }
@@ -43,6 +56,8 @@ public class FTPServer {
                         case 2:
                             getOperation(path);
                             break;
+                        case -1:
+                            return;
                         default:
                             throw new UnsupportedOperationException();
                     }

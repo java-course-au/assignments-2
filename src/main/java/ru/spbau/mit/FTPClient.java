@@ -106,6 +106,18 @@ public class FTPClient {
         }
     }
 
+    public void closeConnection() throws IOException {
+        try (Socket socket = new Socket(host, port)) {
+            final OutputStream outputStream = socket.getOutputStream();
+            final DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
+            dataOutputStream.writeInt(-1);
+            dataOutputStream.writeUTF("");
+            dataOutputStream.flush();
+            return;
+        }
+    }
+
     public FTPClient(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
