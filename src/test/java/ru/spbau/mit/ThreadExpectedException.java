@@ -12,7 +12,7 @@ public class ThreadExpectedException implements TestRule {
     private Class<? extends Throwable> exception = null;
     private ArrayList<Thread> registerThreads = new ArrayList<>();
 
-    private Map<Thread, Class<? extends Throwable> > threadsException = new HashMap<>();
+    private Map<Thread, Class<? extends Throwable>> threadsException = new HashMap<>();
 
     @Override
     public Statement apply(Statement statement, Description description) {

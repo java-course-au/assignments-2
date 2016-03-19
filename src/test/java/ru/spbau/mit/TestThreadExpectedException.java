@@ -6,13 +6,14 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 public class TestThreadExpectedException {
+    private final static int COUNT_OF_THREADS = 10;
     @Rule
     public ThreadExpectedException threadRegister = new ThreadExpectedException();
 
     @Test
     public void simpleOkTest() {
         ArrayList<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -22,7 +23,7 @@ public class TestThreadExpectedException {
             threads.get(i).start();
         }
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             try {
                 threads.get(i).join();
             } catch (InterruptedException ignore) {
@@ -36,7 +37,7 @@ public class TestThreadExpectedException {
     @Test
     public void simpleWATest() {
         ArrayList<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -47,7 +48,7 @@ public class TestThreadExpectedException {
             threads.get(i).start();
         }
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             try {
                 threads.get(i).join();
             } catch (InterruptedException ignore) {
@@ -60,7 +61,7 @@ public class TestThreadExpectedException {
     @Test
     public void twiceExpectOKTest() {
         ArrayList<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -71,7 +72,7 @@ public class TestThreadExpectedException {
             threads.get(i).start();
         }
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             try {
                 threads.get(i).join();
             } catch (InterruptedException ignore) {
@@ -85,7 +86,7 @@ public class TestThreadExpectedException {
     @Test
     public void unfinishedWATest() {
         ArrayList<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -101,7 +102,7 @@ public class TestThreadExpectedException {
     @Test
     public void otherExceptionWATest() {
         ArrayList<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             threads.add(new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -112,7 +113,7 @@ public class TestThreadExpectedException {
             threads.get(i).start();
         }
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < COUNT_OF_THREADS; ++i) {
             try {
                 threads.get(i).join();
             } catch (InterruptedException ignore) {
