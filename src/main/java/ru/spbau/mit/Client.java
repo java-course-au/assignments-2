@@ -1,15 +1,9 @@
 package ru.spbau.mit;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
-/**
- * Created by olga on 13.03.16.
- */
 public class Client {
     private Socket socket;
     private DataInputStream dis;
@@ -17,7 +11,6 @@ public class Client {
 
     private static final int LIST_QUERY = 1;
     private static final int GET_QUERY = 2;
-    private static final int BUFFER_SIZE = 2 * 1024 * 1024;
 
     public Client(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -49,22 +42,15 @@ public class Client {
         return listOfFile;
     }
 
-    public long get(String path, OutputStream outputStream) throws IOException {
+    public InputStream get(String path) throws IOException {
         dos.writeInt(GET_QUERY);
         dos.writeUTF(path);
 
         dos.flush();
 
         long size = dis.readLong();
-        byte[] buffer = new byte[BUFFER_SIZE];
 
-        for (long i = 0; i < size;) {
-            int cntReadByte = dis.read(buffer, 0, (int) Math.min(BUFFER_SIZE, size - i));
-            outputStream.write(buffer, 0, cntReadByte);
-            i += cntReadByte;
-        }
-
-        return size;
+        return new ServerInputStream(dis, size);
     }
 
     public class FileEntry {
@@ -85,6 +71,26 @@ public class Client {
 
         public void setDir(Boolean dir) {
             isDir = dir;
+        }
+    }
+
+    public class ServerInputStream extends InputStream {
+        private DataInputStream dis;
+        private long fileSize;
+
+        ServerInputStream(DataInputStream dis, long fileSize) {
+            this.dis = dis;
+            this.fileSize = fileSize;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (fileSize == 0) {
+                return -1;
+            } else {
+                --fileSize;
+                return dis.read();
+            }
         }
     }
 }

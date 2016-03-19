@@ -2,10 +2,7 @@ package ru.spbau.mit;
 
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,9 +61,15 @@ public class Tests {
         Client client = new Client("localhost", port);
 
         try {
-            assertEquals(client.get(path.toString() + File.separator + "tmp", output), fileString.length());
+            InputStream is = client.get(path.toString() + File.separator + "tmp");
+            String val = "";
+            int currentVal = is.read();
+            while(currentVal != -1) {
+                val += ((char) currentVal);
+                currentVal = is.read();
+            }
 
-            assertEquals(output.toString(), fileString);
+            assertEquals(val, fileString);
         } finally {
             server.stop();
             client.close();
