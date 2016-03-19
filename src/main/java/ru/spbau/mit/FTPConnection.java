@@ -83,10 +83,31 @@ public class FTPConnection implements AutoCloseable {
         dos.flush();
     }
 
-    public void readGet(OutputStream fileStream) throws IOException {
+    public InputStream readGet() throws IOException {
         long fileSize = dis.readLong();
-        if (fileSize > 0) {
-            IOUtils.copyLarge(dis, fileStream, 0, fileSize);
+        return new LimitedInputStream(fileSize, dis);
+    }
+}
+
+class LimitedInputStream extends InputStream {
+    private long size;
+    private InputStream is;
+
+    LimitedInputStream(long size, InputStream is) {
+        this.size = size;
+        this.is = is;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (size == 0) {
+            return -1;
         }
+        int res = is.read();
+        if (res == -1) {
+            return res;
+        }
+        --size;
+        return res;
     }
 }

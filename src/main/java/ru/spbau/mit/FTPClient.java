@@ -1,7 +1,7 @@
 package ru.spbau.mit;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
 
@@ -25,8 +25,8 @@ public class FTPClient implements AutoCloseable {
         return connection.readList();
     }
 
-    public void get(String path, OutputStream outputStream) throws IOException {
+    public InputStream get(String path) throws IOException {
         connection.writeActionGet(path);
-        connection.readGet(outputStream);
+        return connection.readGet();
     }
 }

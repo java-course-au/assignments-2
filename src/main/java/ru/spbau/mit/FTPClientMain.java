@@ -1,5 +1,7 @@
 package ru.spbau.mit;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Hashtable;
@@ -65,7 +67,7 @@ public abstract class FTPClientMain {
                     }
                     path = args[ARG_PATH];
                     outputFile = args[ARG_OUTPUT];
-                    client.get(path, new FileOutputStream(outputFile));
+                    IOUtils.copy(client.get(path), new FileOutputStream(outputFile));
                     break;
                 default:
                     break;

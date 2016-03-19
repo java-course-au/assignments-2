@@ -60,29 +60,21 @@ public class FTPServer implements AutoCloseable {
 
     private void handleConnection(Socket socket) {
         try (FTPConnection connection = new FTPConnection(socket)) {
-            boolean isOpen = true;
-            while (isOpen) {
-                String path;
-                int action;
-                try {
-                    action = connection.readAction();
-                } catch (EOFException ignored) {
+            String path;
+            int action;
+            action = connection.readAction();
+            switch (action) {
+                case FTPConnection.FTP_ACTION_LIST:
+                    path = connection.readActionList();
+                    doList(path, connection);
                     break;
-                }
-                switch (action) {
-                    case FTPConnection.FTP_ACTION_LIST:
-                        path = connection.readActionList();
-                        doList(path, connection);
-                        break;
-                    case FTPConnection.FTP_ACTION_GET:
-                        path = connection.readActionGet();
-                        doGet(path, connection);
-                        break;
-                    default:
-                        System.err.printf("Wrong action from client: %d\n", action);
-                        isOpen = false;
-                        break;
-                }
+                case FTPConnection.FTP_ACTION_GET:
+                    path = connection.readActionGet();
+                    doGet(path, connection);
+                    break;
+                default:
+                    System.err.printf("Wrong action from client: %d\n", action);
+                    break;
             }
         } catch (IOException e) {
             e.printStackTrace();

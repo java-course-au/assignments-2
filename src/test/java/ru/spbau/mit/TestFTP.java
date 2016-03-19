@@ -1,6 +1,7 @@
 package ru.spbau.mit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -8,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,13 +31,16 @@ public class TestFTP {
         try (
                 @SuppressWarnings("unused")
                 FTPServer server = new FTPServer(PORT + 1);
-                FTPClient client = new FTPClient(LOCALHOST, PORT + 1)
         ) {
-            List<FTPFileEntry> list1 = client.list(LOCALHOST);
-            assertEquals(new ArrayList<>(), list1);
+            try (FTPClient client = new FTPClient(LOCALHOST, PORT + 1)) {
+                List<FTPFileEntry> list1 = client.list(LOCALHOST);
+                assertEquals(Collections.emptyList(), list1);
+            }
 
-            List<FTPFileEntry> list2 = client.list(RES);
-            assertEquals(Collections.singletonList(CHECKSTYLE), list2);
+            try (FTPClient client = new FTPClient(LOCALHOST, PORT + 1)) {
+                List<FTPFileEntry> list2 = client.list(RES);
+                assertEquals(Collections.singletonList(CHECKSTYLE), list2);
+            }
         }
     }
 
@@ -47,17 +50,23 @@ public class TestFTP {
         try (
                 @SuppressWarnings("unused")
                 FTPServer server = new FTPServer(PORT + 2);
-                FTPClient client = new FTPClient(LOCALHOST, PORT + 2)
         ) {
             tmpFile = Files.createTempFile("", "");
 
-            try (OutputStream os = Files.newOutputStream(tmpFile)) {
-                client.get(LOCALHOST, os);
+
+            try (
+                    FTPClient client = new FTPClient(LOCALHOST, PORT + 2);
+                    OutputStream os = Files.newOutputStream(tmpFile)
+            ) {
+                IOUtils.copy(client.get(LOCALHOST), os);
             }
             assertEquals(0, Files.size(tmpFile));
 
-            try (OutputStream os = Files.newOutputStream(tmpFile)) {
-                client.get(CHECKSTYLE_FILE, os);
+            try (
+                    FTPClient client = new FTPClient(LOCALHOST, PORT + 2);
+                    OutputStream os = Files.newOutputStream(tmpFile)
+            ) {
+                IOUtils.copy(client.get(CHECKSTYLE_FILE), os);
             }
             assertTrue(FileUtils.contentEquals(tmpFile.toFile(), new File(CHECKSTYLE_FILE)));
         } catch (IOException e) {
