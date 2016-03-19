@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.11.2">
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/ServerMain.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/Server.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/FTPfile.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/Connection.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/ClientMain.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/main/java/Client.java">
+</file>
+<file name="/home/n_buga/git_repository/simpleFTP/src/test/java/ClientTest.java">
+</file>
+</checkstyle>
