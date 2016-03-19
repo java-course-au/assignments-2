@@ -64,7 +64,7 @@ public class Tests {
             InputStream is = client.get(path.toString() + File.separator + "tmp");
             String val = "";
             int currentVal = is.read();
-            while(currentVal != -1) {
+            while (currentVal != -1) {
                 val += ((char) currentVal);
                 currentVal = is.read();
             }

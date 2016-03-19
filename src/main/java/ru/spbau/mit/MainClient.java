@@ -40,7 +40,7 @@ public final class MainClient {
             InputStream is = client.get(path);
             int val = is.read();
             while (val != -1) {
-                System.out.print((char)val);
+                System.out.print(((char) val));
                 val = is.read();
             }
         } else if (Objects.equals(query, "LIST")) {
