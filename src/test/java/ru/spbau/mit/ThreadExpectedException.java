@@ -24,16 +24,16 @@ public class ThreadExpectedException implements TestRule {
                 for (Thread t : registerThreads) {
                     if (t.getState() == Thread.State.TERMINATED) {
                         if (threadsException.containsKey(t) && exception == null) {
-                            throw new Exception("Thread " + t.getName() + " throw exception " +
-                                    threadsException.get(t).getName() + " but waiting not exception");
+                            throw new Exception("Thread " + t.getName() + " throw exception "
+                                    + threadsException.get(t).getName() + " but waiting not exception");
                         }
                         if (!threadsException.containsKey(t) && exception != null) {
-                            throw new Exception("Thread " + t.getName() + " doesn't throw exception " +
-                                    " but waiting exception");
+                            throw new Exception("Thread " + t.getName() + " doesn't throw exception "
+                                    + " but waiting exception");
                         }
                         if (threadsException.get(t) != exception) {
-                            throw new Exception("Thread " + t.getName() + " throw exception " +
-                                    threadsException.get(t).getName() + " but waiting " + exception.getName());
+                            throw new Exception("Thread " + t.getName() + " throw exception "
+                                    + threadsException.get(t).getName() + " but waiting " + exception.getName());
                         }
                     } else {
                         throw new Exception("Thread " + t.getName() + " is not in terminated state");

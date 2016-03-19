@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 public class TestThreadExpectedException {
-    private final static int COUNT_OF_THREADS = 10;
+    private static final int COUNT_OF_THREADS = 10;
     @Rule
     public ThreadExpectedException threadRegister = new ThreadExpectedException();
 
