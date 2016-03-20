@@ -9,12 +9,12 @@ public class MyClassTest {
     public final ThreadExpectedException exp = new ThreadExpectedException();
 
     @Test
-    public void testGood () throws InterruptedException {
+    public void testGood() throws InterruptedException {
         Thread a = new Thread(() -> {
             throw new RuntimeException();
         });
         Thread b = new Thread(() -> {
-           throw new RuntimeException();
+            throw new RuntimeException();
         });
         exp.expect(RuntimeException.class);
         exp.registerThread(a);
@@ -26,7 +26,7 @@ public class MyClassTest {
     }
 
     @Test
-    public void testBad () throws InterruptedException {
+    public void testBad() throws InterruptedException {
         Thread a = new Thread(() -> {
             throw new RuntimeException();
         });
@@ -42,12 +42,12 @@ public class MyClassTest {
     }
 
     @Test
-    public void testAnotherBad () throws InterruptedException {
+    public void testAnotherBad() throws InterruptedException {
         Thread a = new Thread(() -> {
-            while(true);
+            while (true) {}
         });
         Thread b = new Thread(() -> {
-            while(true);
+            while (true) {}
         });
         exp.expect(RuntimeException.class);
         exp.registerThread(a);

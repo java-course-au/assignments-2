@@ -1,18 +1,16 @@
 package ru.spbau.mit;
 
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ThreadExpectedException implements TestRule {
 
-    private Class<? extends Throwable> expected = null;
     private final HashMap<Thread, Throwable> threads = new HashMap<>();
+    private Class<? extends Throwable> expected = null;
 
     public void expect(Class<? extends Throwable> e) {
         expected = e;
@@ -29,7 +27,7 @@ public class ThreadExpectedException implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 statement.evaluate();
-                for (Map.Entry<Thread, Throwable> entry: threads.entrySet()) {
+                for (Map.Entry<Thread, Throwable> entry : threads.entrySet()) {
                     if (entry.getKey().getState() != Thread.State.TERMINATED) {
                         throw new Exception("The thread is not stopped");
                     }
