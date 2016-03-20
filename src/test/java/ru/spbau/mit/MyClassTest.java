@@ -2,6 +2,8 @@ package ru.spbau.mit;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 
 public class MyClassTest {
 
@@ -44,10 +46,14 @@ public class MyClassTest {
     @Test
     public void testAnotherBad() throws InterruptedException {
         Thread a = new Thread(() -> {
-            while (true) {}
+            while (true) {
+                continue;
+            }
         });
         Thread b = new Thread(() -> {
-            while (true) {}
+            while (true) {
+                continue;
+            }
         });
         exp.expect(RuntimeException.class);
         exp.registerThread(a);

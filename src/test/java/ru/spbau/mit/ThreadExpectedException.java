@@ -2,6 +2,8 @@ package ru.spbau.mit;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
+import org.junit.runner.RunWith;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.Statement;
 
 import java.util.HashMap;
@@ -32,8 +34,9 @@ public class ThreadExpectedException implements TestRule {
                         throw new Exception("The thread is not stopped");
                     }
                     Throwable value = entry.getValue();
-                    Class classs = value.getClass();
-                    if (!classs.isAssignableFrom(expected)) {
+                    if((value == null && expected != null)
+                            || (value != null && expected == null)
+                            || (expected != null && !value.getClass().isAssignableFrom(expected))) {
                         throw new Exception("The thread threw an inappropriate exception");
                     }
                 }
