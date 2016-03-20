@@ -1,8 +1,13 @@
 package ru.spbau.mit;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,15 +20,8 @@ public class FTPServerTest {
 
     private static final int TEST_FILES_NUM = 4;
     private static final HashMap<String, Boolean> PATHS = new HashMap<>();
-
-    //TODO
-    //@Rule
-    //  public final TeporaryFolder folder = new TemporaryFolder();
-    
-    
-    //assertThat
-    //1 параметр -- произвольный объект
-    //2          -- предикат
+    private FTPServer server;
+    private FTPClient client;
 
     private static String createTestDir() throws IOException {
         PATHS.clear();
@@ -58,59 +56,44 @@ public class FTPServerTest {
         Files.delete(Paths.get(path));
     }
 
-    //TODO
-    //@Before
-    //    FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
-    //    FTPClient client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
-    //    String dir = createTestDir();
-    //@After
-    //    deleteTestDir(dir);
-    //    client.stop();
-    //    server.tearDown();
-    //TODO
+    @Before
+    public void initServerClient() throws IOException {
+        server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
+        client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
+    }
 
+    @After
+    public void deinitServerClient() throws IOException, InterruptedException {
+        client.stop();
+        server.tearDown();
+    }
 
     @Test
     public void testMultipleQueries() throws Exception {
-        FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
-        FTPClient client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
-
         assertEquals(0,
-                ((FTPClient.ListResponse) client.makeRequest(FTPClient.LIST, "kdjfhgfdjshfg", null)).getSize());
+                (client.listRequestWrapper(FTPClient.LIST, "kdjfhgfdjshfg")).getSize());
 
-        Path tmp = Files.createTempFile("get_response", "");
-        File resFile = tmp.toFile();
-        client.makeRequest(FTPClient.GET, "dfkjghfkjghfj", resFile);
+        File resFile = client.getRequestWrapper(FTPClient.GET, "dfkjghfkjghfj");
         assertEquals(
                 0,
                 new DataInputStream(new FileInputStream(resFile)).readInt()
         );
-        Files.delete(tmp);
-
-        client.stop();
-        server.tearDown();
+        Files.delete(resFile.toPath());
     }
 
     @Test
     public void testNonEmptyFolderListing() throws IOException, InterruptedException {
-        FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
-        FTPClient client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
         String dir = createTestDir();
         assertEquals(PATHS,
-                ((FTPClient.ListResponse) client.makeRequest(FTPClient.LIST, dir, null)).getFilesList());
+                (client.listRequestWrapper(FTPClient.LIST, dir)).getFilesList());
         deleteTestDir(dir);
-        client.stop();
-        server.tearDown();
     }
 
     @Test
     public void testGetFileContent() throws IOException, InterruptedException {
-        FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
-        FTPClient client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
         String dir = createTestDir();
         for (Map.Entry<String, Boolean> entry : PATHS.entrySet()) {
-            File resFile = Files.createTempFile("get_response", "").toFile();
-            client.makeRequest(FTPClient.GET, entry.getKey(), resFile);
+            File resFile = client.getRequestWrapper(FTPClient.GET, entry.getKey());
             DataInputStream input = new DataInputStream(new FileInputStream(resFile));
             input.readInt();
             byte[] response = new byte[1];
@@ -119,13 +102,9 @@ public class FTPServerTest {
             Files.delete(resFile.toPath());
         }
         deleteTestDir(dir);
-        client.stop();
-        server.tearDown();
     }
 
     @Test
     public void testTearDown() throws Exception {
-        FTPServer server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
-        server.tearDown();
     }
 }
