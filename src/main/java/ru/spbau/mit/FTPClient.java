@@ -59,7 +59,7 @@ public class FTPClient implements Client {
     }
 
     @Override
-    public InputStream executeGet(String path, OutputStream outputStream) {
+    public InputStream executeGet(String path) {
         try {
             socketOutputStream.writeInt(Constants.GET_REQUEST);
             socketOutputStream.writeUTF(path);

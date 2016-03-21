@@ -30,8 +30,8 @@ public class TestFTPServer {
             new FileInfo("folder1", true),
             new FileInfo("text1.txt", false));
 
-    private Server initializeServer() {
-        Server server = new FTPServer(PORT, ROOT_DIRECTORY);
+    private Server initializeServer(int port) {
+        Server server = new FTPServer(port, ROOT_DIRECTORY);
         server.start();
         return server;
     }
@@ -44,13 +44,13 @@ public class TestFTPServer {
 
     @Test
     public void testGetRequest() {
-        Server server = initializeServer();
-        Client client = initializeClient(PORT);
+        Server server = initializeServer(PORT + 1);
+        Client client = initializeClient(PORT + 1);
 
         try {
             Path pathToCopy = Paths.get(ROOT_DIRECTORY + DOCUMENT_TO_COPY);
             OutputStream outputStream = Files.newOutputStream(pathToCopy);
-            IOUtils.copy(client.executeGet(TEST_DOCUMENT2, outputStream), outputStream);
+            IOUtils.copy(client.executeGet(TEST_DOCUMENT2), outputStream);
             assertEquals(Files.readAllLines(Paths.get(ROOT_DIRECTORY + TEST_DOCUMENT2)),
                     Files.readAllLines(pathToCopy));
             Files.delete(pathToCopy);
@@ -64,7 +64,7 @@ public class TestFTPServer {
 
     @Test
     public void testListRequest() {
-        Server server = initializeServer();
+        Server server = initializeServer(PORT);
 
         List<Client> clients = new ArrayList<>();
         for (int i = 0; i < CLIENTS_NUMBER; i++) {
