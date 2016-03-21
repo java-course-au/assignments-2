@@ -61,32 +61,32 @@ public class FTPServer implements Server {
         if (socket.isClosed()) {
             return;
         }
-        DataInputStream inputStream = null;
-        DataOutputStream outputStream = null;
+        DataInputStream inputStream;
+        DataOutputStream outputStream;
         try {
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
-        while (!socket.isClosed()) {
+        try {
+            int requestType;
             try {
-                int requestType = 0;
-                try {
-                    requestType = inputStream.readInt();
-                } catch (EOFException e) {
-                    break;
-                }
-                String path = rootPath + inputStream.readUTF();
-                if (requestType == Constants.LIST_REQUEST) {
-                    handleList(outputStream, path);
-                }
-                if (requestType == Constants.GET_REQUEST) {
-                    handleGet(outputStream, path);
-                }
-            } catch (IOException e) {
+                requestType = inputStream.readInt();
+            } catch (EOFException e) {
                 e.printStackTrace();
+                return;
             }
+            String path = rootPath + inputStream.readUTF();
+            if (requestType == Constants.LIST_REQUEST) {
+                handleList(outputStream, path);
+            }
+            if (requestType == Constants.GET_REQUEST) {
+                handleGet(outputStream, path);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

@@ -1,5 +1,6 @@
 package ru.spbau.mit;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestFTPServer {
     private static final int PORT = 12345;
+    private static final int CLIENTS_NUMBER = 3;
     private static final String ROOT_DIRECTORY = "src/test/resources/test/";
     private static final String TEST_DIRECTORY = "folder";
     private static final String TEST_FAKE_DIRECTORY = "fakeFolder";
@@ -28,43 +30,53 @@ public class TestFTPServer {
             new FileInfo("folder1", true),
             new FileInfo("text1.txt", false));
 
-    @Test
-    public void testGetRequest() {
+    private Server initializeServer() {
         Server server = new FTPServer(PORT, ROOT_DIRECTORY);
         server.start();
+        return server;
+    }
+
+    private Client initializeClient(int port) {
         Client client = new FTPClient();
-        client.connect("localhost", PORT);
+        client.connect("localhost", port);
+        return client;
+    }
 
-        assertEquals(client.executeList(TEST_DIRECTORY), EXPECTED_FILE_LIST);
-        assertEquals(client.executeList(TEST_FAKE_DIRECTORY), new ArrayList<>());
-        assertEquals(client.executeList(TEST_DOCUMENT), new ArrayList<>());
+    @Test
+    public void testGetRequest() {
+        Server server = initializeServer();
+        Client client = initializeClient(PORT);
 
-        OutputStream outputStream = null;
-        Path pathToCopy = Paths.get(ROOT_DIRECTORY + DOCUMENT_TO_COPY);
         try {
-            outputStream = Files.newOutputStream(pathToCopy);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        client.executeGet(TEST_DOCUMENT2, outputStream);
-        try {
+            Path pathToCopy = Paths.get(ROOT_DIRECTORY + DOCUMENT_TO_COPY);
+            OutputStream outputStream = Files.newOutputStream(pathToCopy);
+            IOUtils.copy(client.executeGet(TEST_DOCUMENT2, outputStream), outputStream);
             assertEquals(Files.readAllLines(Paths.get(ROOT_DIRECTORY + TEST_DOCUMENT2)),
                     Files.readAllLines(pathToCopy));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
             Files.delete(pathToCopy);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         client.disconnect();
         server.stop();
     }
 
     @Test
     public void testListRequest() {
+        Server server = initializeServer();
 
+        List<Client> clients = new ArrayList<>();
+        for (int i = 0; i < CLIENTS_NUMBER; i++) {
+            clients.add(initializeClient(PORT));
+        }
+        assertEquals(clients.get(0).executeList(TEST_DIRECTORY), EXPECTED_FILE_LIST);
+        assertEquals(clients.get(1).executeList(TEST_FAKE_DIRECTORY), new ArrayList<>());
+        assertEquals(clients.get(2).executeList(TEST_DOCUMENT), new ArrayList<>());
+        for (int i = 0; i < CLIENTS_NUMBER; i++) {
+            clients.get(i).disconnect();
+        }
+
+        server.stop();
     }
 }
