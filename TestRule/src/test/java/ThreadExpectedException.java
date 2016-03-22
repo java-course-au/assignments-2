@@ -24,10 +24,13 @@ public class ThreadExpectedException implements TestRule {
                     if (thrownExceptions.size() == 0) {
                         throw new Exception("Expected exception. There wasn't any exception");
                     }
-                    for (Throwable e : thrownExceptions) {
+                    for (Throwable e: thrownExceptions) {
                         if (e.getClass() != expectedException) {
                             throw new Exception("Expected only " + expectedException.getName());
                         }
+                    }
+                    if (thrownExceptions.size() != registeredThreads.size()) {
+                        throw new Exception("Not all threads throw exception");
                     }
                 }
             }
