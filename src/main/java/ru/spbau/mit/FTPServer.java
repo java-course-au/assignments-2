@@ -1,6 +1,5 @@
 package ru.spbau.mit;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
