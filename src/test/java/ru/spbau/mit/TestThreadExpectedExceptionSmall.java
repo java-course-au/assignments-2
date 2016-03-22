@@ -28,6 +28,10 @@ public class TestThreadExpectedExceptionSmall {
                     if (!isThrown) {
                         throw e;
                     }
+                    return;
+                }
+                if(isThrown){
+                    throw new RuntimeException();
                 }
             }
         }
