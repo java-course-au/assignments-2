@@ -31,23 +31,12 @@ public final class SecondPartTasks {
     // Надо промоделировать этот процесс с помощью класса java.util.Random и посчитать,
     // какова вероятность попасть в мишень.
     private static final int SHOOTS_COUNT = (int) 1e6;
+    private static final Random RANDOM = new Random(17);
 
     public static double piDividedBy4() {
-        Random r = new Random(17);
-        class Point {
-            private double x, y;
-
-            Point(double x, double y) {
-                this.x = x;
-                this.y = y;
-            }
-
-            public double length() {
-                return Math.sqrt(x * x + y * y);
-            }
-        }
-        return Stream.generate(() -> new Point(r.nextDouble() - 0.5, r.nextDouble() - 0.5)).limit(SHOOTS_COUNT).
-                filter(point -> point.length() <= 0.5).count() * 1.0 / SHOOTS_COUNT;
+        return Stream.generate(() -> Math.sqrt(Math.pow(RANDOM.nextDouble() - 0.5, 2)
+                + Math.pow(RANDOM.nextDouble() - 0.5, 2)))
+                .limit(SHOOTS_COUNT).filter(x -> x < 0.5).count() * 1.0 / SHOOTS_COUNT;
     }
 
     // Дано отображение из имени автора в список с содержанием его произведений.
