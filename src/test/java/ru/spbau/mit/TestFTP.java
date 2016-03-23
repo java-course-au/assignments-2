@@ -2,6 +2,7 @@ package ru.spbau.mit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -27,53 +28,58 @@ public class TestFTP {
     );
 
     @Test
-    public void testList() throws IOException {
+    public void testListEmpty() throws IOException {
         try (
                 @SuppressWarnings("unused")
                 FTPServer server = new FTPServer(PORT + 1);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 1)
         ) {
-            try (FTPClient client = new FTPClient(LOCALHOST, PORT + 1)) {
-                List<FTPFileEntry> list1 = client.list(LOCALHOST);
-                assertEquals(Collections.emptyList(), list1);
-            }
+            List<FTPFileEntry> list1 = client.list(LOCALHOST);
+            assertEquals(Collections.emptyList(), list1);
+        }
+    }
 
-            try (FTPClient client = new FTPClient(LOCALHOST, PORT + 1)) {
-                List<FTPFileEntry> list2 = client.list(RES);
-                assertEquals(Collections.singletonList(CHECKSTYLE), list2);
-            }
+    @Test
+    public void testList() throws IOException {
+        try (
+                @SuppressWarnings("unused")
+                FTPServer server = new FTPServer(PORT + 2);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 2)
+        ) {
+            List<FTPFileEntry> list2 = client.list(RES);
+            assertEquals(Collections.singletonList(CHECKSTYLE), list2);
+        }
+    }
+
+    @Test
+    public void testGetEmpty() throws IOException {
+        Path tmpFile = Files.createTempFile("", "");
+        try (
+                @SuppressWarnings("unused")
+                FTPServer server = new FTPServer(PORT + 3);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 3);
+                OutputStream os = Files.newOutputStream(tmpFile)
+        ) {
+            IOUtils.copy(client.get(LOCALHOST), os);
+            assertEquals(0, Files.size(tmpFile));
+        } finally {
+            Files.delete(tmpFile);
         }
     }
 
     @Test
     public void testGet() throws IOException {
-        Path tmpFile = null;
+        Path tmpFile = Files.createTempFile("", "");
         try (
                 @SuppressWarnings("unused")
-                FTPServer server = new FTPServer(PORT + 2);
+                FTPServer server = new FTPServer(PORT + 4);
+                FTPClient client = new FTPClient(LOCALHOST, PORT + 4);
+                OutputStream os = Files.newOutputStream(tmpFile)
         ) {
-            tmpFile = Files.createTempFile("", "");
-
-
-            try (
-                    FTPClient client = new FTPClient(LOCALHOST, PORT + 2);
-                    OutputStream os = Files.newOutputStream(tmpFile)
-            ) {
-                IOUtils.copy(client.get(LOCALHOST), os);
-            }
-            assertEquals(0, Files.size(tmpFile));
-
-            try (
-                    FTPClient client = new FTPClient(LOCALHOST, PORT + 2);
-                    OutputStream os = Files.newOutputStream(tmpFile)
-            ) {
-                IOUtils.copy(client.get(CHECKSTYLE_FILE), os);
-            }
+            IOUtils.copy(client.get(CHECKSTYLE_FILE), os);
             assertTrue(FileUtils.contentEquals(tmpFile.toFile(), new File(CHECKSTYLE_FILE)));
-        } catch (IOException e) {
-            if (tmpFile != null && Files.exists(tmpFile)) {
-                Files.delete(tmpFile);
-            }
-            throw e;
+        } finally {
+            Files.delete(tmpFile);
         }
     }
 }
