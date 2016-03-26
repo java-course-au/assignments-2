@@ -2,7 +2,6 @@ package ru.spbau.mit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,8 +22,13 @@ public class TestFTP {
 
     private static final String RES = "src/test/resources/";
     private static final String CHECKSTYLE_FILE = RES + "checkstyle.xml";
+    private static final String CHECKSTYLE_SUPPRESSIONS_FILE = RES + "checkstyle-suppressions.xml";
     private static final FTPFileEntry CHECKSTYLE = new FTPFileEntry(
             CHECKSTYLE_FILE,
+            false
+    );
+    private static final FTPFileEntry CHECKSTYLE_SUPPRESSIONS = new FTPFileEntry(
+            CHECKSTYLE_SUPPRESSIONS_FILE,
             false
     );
 
@@ -34,8 +39,8 @@ public class TestFTP {
                 FTPServer server = new FTPServer(PORT + 1);
                 FTPClient client = new FTPClient(LOCALHOST, PORT + 1)
         ) {
-            List<FTPFileEntry> list1 = client.list(LOCALHOST);
-            assertEquals(Collections.emptyList(), list1);
+            List<FTPFileEntry> list = client.list(LOCALHOST);
+            assertEquals(Collections.emptyList(), list);
         }
     }
 
@@ -46,8 +51,9 @@ public class TestFTP {
                 FTPServer server = new FTPServer(PORT + 2);
                 FTPClient client = new FTPClient(LOCALHOST, PORT + 2)
         ) {
-            List<FTPFileEntry> list2 = client.list(RES);
-            assertEquals(Collections.singletonList(CHECKSTYLE), list2);
+            List<FTPFileEntry> list = client.list(RES);
+            List<FTPFileEntry> expected = Arrays.asList(CHECKSTYLE, CHECKSTYLE_SUPPRESSIONS);
+            assertTrue(expected.containsAll(list) && list.containsAll(expected));
         }
     }
 

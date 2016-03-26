@@ -20,9 +20,7 @@ public class FTPServer implements AutoCloseable {
     private ExecutorService executorService;
 
     public FTPServer(int port) throws IOException {
-        synchronized (this) {
-            serverSocket = new ServerSocket(port);
-        }
+        serverSocket = new ServerSocket(port);
         executorService = Executors.newCachedThreadPool();
         executorService.submit((Runnable) this::work);
     }
@@ -59,20 +57,16 @@ public class FTPServer implements AutoCloseable {
 
     private void handleConnection(Socket socket) {
         try (FTPConnection connection = new FTPConnection(socket)) {
-            String path;
-            int action;
-            action = connection.readAction();
-            switch (action) {
-                case FTPConnection.FTP_ACTION_LIST:
-                    path = connection.readActionList();
-                    doList(path, connection);
+            int request = connection.readRequest();
+            switch (request) {
+                case FTPConnection.FTP_REQUEST_LIST:
+                    doList(connection);
                     break;
-                case FTPConnection.FTP_ACTION_GET:
-                    path = connection.readActionGet();
-                    doGet(path, connection);
+                case FTPConnection.FTP_REQUEST_GET:
+                    doGet(connection);
                     break;
                 default:
-                    System.err.printf("Wrong action from client: %d\n", action);
+                    System.err.printf("Wrong request from client: %d\n", request);
                     break;
             }
         } catch (IOException e) {
@@ -80,7 +74,8 @@ public class FTPServer implements AutoCloseable {
         }
     }
 
-    private void doList(String stringPath, FTPConnection connection) throws IOException {
+    private void doList(FTPConnection connection) throws IOException {
+        String stringPath = connection.readListRequest();
         Path path = Paths.get(stringPath);
         List<FTPFileEntry> contents;
         try {
@@ -91,15 +86,16 @@ public class FTPServer implements AutoCloseable {
         } catch (IOException e) {
             contents = Collections.emptyList();
         }
-        connection.writeList(contents);
+        connection.writeListResponse(contents);
     }
 
-    private void doGet(String stringPath, FTPConnection connection) throws IOException {
+    private void doGet(FTPConnection connection) throws IOException {
+        String stringPath = connection.readGetRequest();
         Path path = Paths.get(stringPath);
         if (!Files.exists(path)) {
-            connection.writeGet(0, null);
+            connection.writeGetResponse(0, null);
             return;
         }
-        connection.writeGet(Files.size(path), Files.newInputStream(path));
+        connection.writeGetResponse(Files.size(path), Files.newInputStream(path));
     }
 }

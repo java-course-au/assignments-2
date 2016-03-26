@@ -154,7 +154,9 @@
         <!--<module name="HiddenField"/>-->
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
-        <module name="MagicNumber"/>
+        <module name="MagicNumber">
+            <property name="id" value="GroupSrc" />
+        </module>
         <module name="MissingSwitchDefault"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
@@ -176,4 +178,7 @@
 
     </module>
 
+    <module name="SuppressionFilter">
+        <property name="file" value="src/test/resources/checkstyle-suppressions.xml"/>
+    </module>
 </module>

@@ -8,6 +8,8 @@ import java.io.IOException;
  * Created by ldvsoft on 08.03.16.
  */
 public final class FTPFileEntry {
+    private static final int HASH_BASE = 31;
+
     private String fileName;
     private boolean isDirectory;
 
@@ -26,7 +28,7 @@ public final class FTPFileEntry {
 
     @Override
     public int hashCode() {
-        return fileName.hashCode() + Boolean.valueOf(isDirectory).hashCode();
+        return fileName.hashCode() + Boolean.valueOf(isDirectory).hashCode() * HASH_BASE;
     }
 
     @Override

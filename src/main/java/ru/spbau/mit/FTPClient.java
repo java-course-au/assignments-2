@@ -21,12 +21,12 @@ public class FTPClient implements AutoCloseable {
     }
 
     public List<FTPFileEntry> list(String path) throws IOException {
-        connection.writeActionList(path);
-        return connection.readList();
+        connection.writeListRequest(path);
+        return connection.readListResponse();
     }
 
     public InputStream get(String path) throws IOException {
-        connection.writeActionGet(path);
-        return connection.readGet();
+        connection.writeGetRequest(path);
+        return connection.readGetResponse();
     }
 }

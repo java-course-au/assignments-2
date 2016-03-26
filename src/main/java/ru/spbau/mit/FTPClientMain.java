@@ -11,7 +11,7 @@ import java.util.Map;
  * Created by ldvsoft on 08.03.16.
  */
 public abstract class FTPClientMain {
-    private static final Map<String, Integer> ACTIONS = new Hashtable<>();
+    private static final Map<String, Integer> REQUESTS = new Hashtable<>();
     private static final int ARG_HOST = 0;
     private static final int ARG_PORT = 1;
     private static final int ARG_ACTION = 2;
@@ -19,8 +19,8 @@ public abstract class FTPClientMain {
     private static final int ARG_OUTPUT = 4;
 
     static {
-        ACTIONS.put("list", FTPConnection.FTP_ACTION_LIST);
-        ACTIONS.put("get", FTPConnection.FTP_ACTION_GET);
+        REQUESTS.put("list", FTPConnection.FTP_REQUEST_LIST);
+        REQUESTS.put("get", FTPConnection.FTP_REQUEST_GET);
     }
 
     public static void main(String[] args) {
@@ -40,17 +40,17 @@ public abstract class FTPClientMain {
             helpAndHalt();
             return;
         }
-        if (!ACTIONS.containsKey(actionString)) {
-            System.err.printf("Wrong action: '%s'.\n", actionString);
+        if (!REQUESTS.containsKey(actionString)) {
+            System.err.printf("Wrong request: '%s'.\n", actionString);
             helpAndHalt();
             return;
         }
-        int action = ACTIONS.get(actionString);
+        int request = REQUESTS.get(actionString);
 
         try (FTPClient client = new FTPClient(host, port)) {
             String path, outputFile;
-            switch (action) {
-                case FTPConnection.FTP_ACTION_LIST:
+            switch (request) {
+                case FTPConnection.FTP_REQUEST_LIST:
                     if (args.length < ARG_PATH + 1) {
                         System.err.printf("No path.\n");
                         helpAndHalt();
@@ -60,7 +60,7 @@ public abstract class FTPClientMain {
                             e -> System.out.printf("%s %s\n", e.getFileName(), e.isDirectory() ? "DIR" : "")
                     );
                     break;
-                case FTPConnection.FTP_ACTION_GET:
+                case FTPConnection.FTP_REQUEST_GET:
                     if (args.length < ARG_OUTPUT + 1) {
                         System.err.printf("No path or output file.\n");
                         helpAndHalt();
@@ -81,9 +81,9 @@ public abstract class FTPClientMain {
         System.err.printf(""
                         + "Usage:\n"
                         + "\tjava FTPClientMain.class <host> <port> <action> [params...]\n"
-                        + "Available ACTIONS:\n"
+                        + "Available requests:\n"
         );
-        ACTIONS.keySet()
+        REQUESTS.keySet()
                 .forEach(action -> System.err.printf("\t%s\n", action));
         System.exit(1);
     }
