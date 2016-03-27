@@ -80,18 +80,18 @@ public class Tests {
 
     @Test
     public void testList() throws IOException {
-        String[] fileName = new String[]{"dir1", "dir2", "dir3", "dir4", "file1", "file2", "file3", "file4"};
+        String[] filesNames = new String[]{"dir1", "dir2", "dir3", "dir4", "file1", "file2", "file3", "file4"};
 
         Set<Client.FileEntry> setOfFiles = new HashSet<Client.FileEntry>();
 
         Path path = Files.createTempDirectory("FTP");
         for (int i = 0; i < CNT_DIR; ++i) {
-            (new File(path.toString() + File.separator + fileName[i])).mkdir();
-            setOfFiles.add(new Client.FileEntry(fileName[i], true));
+            (new File(path.toString() + File.separator + filesNames[i])).mkdir();
+            setOfFiles.add(new Client.FileEntry(filesNames[i], true));
         }
-        for (int i = CNT_DIR; i < fileName.length; ++i) {
-            (new File(path.toString() + File.separator + fileName[i])).createNewFile();
-            setOfFiles.add(new Client.FileEntry(fileName[i], false));
+        for (int i = CNT_DIR; i < filesNames.length; ++i) {
+            (new File(path.toString() + File.separator + filesNames[i])).createNewFile();
+            setOfFiles.add(new Client.FileEntry(filesNames[i], false));
         }
 
         int port = 0;
@@ -114,7 +114,7 @@ public class Tests {
 
         try {
             ArrayList<Client.FileEntry> ls = client.list(path.toString());
-            assertEquals(ls.size(), fileName.length);
+            assertEquals(ls.size(), filesNames.length);
 
             Set<Client.FileEntry> lsSet = new HashSet<>();
             lsSet.addAll(ls);
