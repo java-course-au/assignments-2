@@ -69,6 +69,7 @@ public class Server {
             while (!socket.isClosed()) {
                 int operation = dis.readInt();
                 String path = dis.readUTF();
+                assert(operation == LIST_QUERY || operation == GET_QUERY);
                 if (operation == LIST_QUERY) {
                     handlingListQuery(path, dos);
                 } else {
