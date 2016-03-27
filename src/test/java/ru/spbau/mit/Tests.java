@@ -67,7 +67,7 @@ public class Tests extends TestCase {
 
         writer.close();
 
-        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        InputStream is = client.sendGetQuery(path.toString() + File.separator + "tmp");
         assertEquals(readFromStream(is), fileString);
     }
 
@@ -76,7 +76,7 @@ public class Tests extends TestCase {
         Path path = Files.createTempDirectory("FTP");
         File file = new File(path.toString() + File.separator + "tmp");
 
-        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        InputStream is = client.sendGetQuery(path.toString() + File.separator + "tmp");
         assertEquals(readFromStream(is), "");
     }
 
@@ -84,7 +84,7 @@ public class Tests extends TestCase {
     public void testGetFileDoesNotExists() throws IOException {
         Path path = Files.createTempDirectory("FTP");
 
-        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        InputStream is = client.sendGetQuery(path.toString() + File.separator + "tmp");
         assertEquals(readFromStream(is), "");
     }
 
@@ -105,7 +105,7 @@ public class Tests extends TestCase {
             setOfFiles.add(new Client.FileEntry(filesNames[i], false));
         }
 
-        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        ArrayList<Client.FileEntry> ls = client.sendListQuery(path.toString());
         assertEquals(ls.size(), filesNames.length);
 
         Set<Client.FileEntry> lsSet = new HashSet<>();
@@ -119,7 +119,7 @@ public class Tests extends TestCase {
     public void testListEmpty() throws IOException {
         Path path = Files.createTempDirectory("FTP");
 
-        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        ArrayList<Client.FileEntry> ls = client.sendListQuery(path.toString());
         assertEquals(ls.size(), 0);
 
         new File(path.toString()).delete();
@@ -129,7 +129,7 @@ public class Tests extends TestCase {
     public void testListFileDoesNotExists() throws IOException {
         Path path = Files.createTempDirectory("FTP");
 
-        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        ArrayList<Client.FileEntry> ls = client.sendListQuery(path.toString());
         assertEquals(ls.size(), 0);
 
         new File(path.toString()).delete();

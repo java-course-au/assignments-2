@@ -37,14 +37,14 @@ public final class MainClient {
         Client client = new Client(host, port);
 
         if (Objects.equals(query, "GET")) {
-            InputStream is = client.get(path);
+            InputStream is = client.sendGetQuery(path);
             int val = is.read();
             while (val != -1) {
                 System.out.print(((char) val));
                 val = is.read();
             }
         } else if (Objects.equals(query, "LIST")) {
-            ArrayList<Client.FileEntry> listOfFile = client.list(path);
+            ArrayList<Client.FileEntry> listOfFile = client.sendListQuery(path);
             for (Client.FileEntry file : listOfFile) {
                 System.out.print(file.getName() + " " + file.getDir().toString() + "\n");
             }

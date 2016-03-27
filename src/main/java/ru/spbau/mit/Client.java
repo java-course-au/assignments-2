@@ -25,7 +25,7 @@ public class Client {
         }
     }
 
-    public ArrayList<FileEntry> list(String path) throws IOException {
+    public ArrayList<FileEntry> sendListQuery(String path) throws IOException {
         dos.writeInt(LIST_QUERY_ID);
         dos.writeUTF(path);
 
@@ -40,7 +40,7 @@ public class Client {
         return listOfFile;
     }
 
-    public InputStream get(String path) throws IOException {
+    public InputStream sendGetQuery(String path) throws IOException {
         dos.writeInt(GET_QUERY_ID);
         dos.writeUTF(path);
 
