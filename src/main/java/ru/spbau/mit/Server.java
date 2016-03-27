@@ -13,8 +13,6 @@ public class Server {
     private static final int LIST_QUERY = 1;
     private static final int GET_QUERY = 2;
 
-    private static final int BUFFER_SIZE = 2 * 1024 * 1024;
-
     private final int port;
 
     public Server(int port) {
@@ -71,11 +69,12 @@ public class Server {
             while (!socket.isClosed()) {
                 int operation = dis.readInt();
                 String path = dis.readUTF();
-                assert(operation == LIST_QUERY || operation == GET_QUERY);
                 if (operation == LIST_QUERY) {
                     handlingListQuery(path, dos);
-                } else {
+                } else if (operation == GET_QUERY) {
                     handlingGetQuery(path, dos);
+                } else {
+                    System.err.printf("Wrong query");
                 }
             }
         } catch (IOException ignored) {
