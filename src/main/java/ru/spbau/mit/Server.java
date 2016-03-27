@@ -1,13 +1,12 @@
 package ru.spbau.mit;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-/**
- * Created by olga on 13.03.16.
- */
 public class Server {
     private ServerSocket serverSocket;
 
@@ -108,12 +107,8 @@ public class Server {
         if (f.exists() && !f.isDirectory() && f.canRead()) {
             dos.writeLong(f.length());
             FileInputStream fileReader = new FileInputStream(f);
-            byte[] buffer = new byte[(int) Math.min(f.length(), BUFFER_SIZE)];
-            int countReadByte = fileReader.read(buffer);
-            while (countReadByte != -1) {
-                dos.write(buffer, 0, countReadByte);
-                countReadByte = fileReader.read(buffer);
-            }
+
+            IOUtils.copyLarge(fileReader, dos);
         } else {
             dos.writeLong(0L);
         }
