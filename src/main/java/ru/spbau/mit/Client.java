@@ -103,7 +103,7 @@ public class Client {
         }
     }
 
-    public class ServerInputStream extends InputStream {
+    class ServerInputStream extends InputStream {
         private DataInputStream dis;
         private long fileSize;
 
