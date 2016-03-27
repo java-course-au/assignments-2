@@ -9,8 +9,8 @@ public class Client {
     private DataInputStream dis;
     private DataOutputStream dos;
 
-    private static final int LIST_QUERY = 1;
-    private static final int GET_QUERY = 2;
+    private static final int LIST_QUERY_ID = 1;
+    private static final int GET_QUERY_ID = 2;
 
     public Client(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -26,7 +26,7 @@ public class Client {
     }
 
     public ArrayList<FileEntry> list(String path) throws IOException {
-        dos.writeInt(LIST_QUERY);
+        dos.writeInt(LIST_QUERY_ID);
         dos.writeUTF(path);
 
         dos.flush();
@@ -41,7 +41,7 @@ public class Client {
     }
 
     public InputStream get(String path) throws IOException {
-        dos.writeInt(GET_QUERY);
+        dos.writeInt(GET_QUERY_ID);
         dos.writeUTF(path);
 
         dos.flush();

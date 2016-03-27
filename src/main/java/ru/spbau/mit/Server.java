@@ -76,9 +76,9 @@ public class Server {
                 int operation = dis.readInt();
                 String path = dis.readUTF();
                 if (operation == LIST_QUERY) {
-                    listQuery(path, dos);
+                    handlingListQuery(path, dos);
                 } else {
-                    getQuery(path, dos);
+                    handlingGetQuery(path, dos);
                 }
             }
         } catch (IOException ignored) {
@@ -90,7 +90,7 @@ public class Server {
         }
     }
 
-    private void listQuery(String path, DataOutputStream dos) throws IOException {
+    private void handlingListQuery(String path, DataOutputStream dos) throws IOException {
         File f = new File(path);
         if (f.isDirectory()) {
             File[] fileList = f.listFiles();
@@ -108,7 +108,7 @@ public class Server {
         }
     }
 
-    private void getQuery(String path, DataOutputStream dos) throws IOException {
+    private void handlingGetQuery(String path, DataOutputStream dos) throws IOException {
         File f = new File(path);
         if (f.exists() && !f.isDirectory() && f.canRead()) {
             dos.writeLong(f.length());
