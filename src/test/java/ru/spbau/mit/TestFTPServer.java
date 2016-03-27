@@ -38,7 +38,11 @@ public class TestFTPServer {
 
     private Client initializeClient(int port) {
         Client client = new FTPClient();
-        client.connect("localhost", port);
+        try {
+            client.connect("localhost", port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return client;
     }
 
@@ -57,9 +61,17 @@ public class TestFTPServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        client.disconnect();
+        try {
+            client.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         server.stop();
+        try {
+            server.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -70,13 +82,21 @@ public class TestFTPServer {
         for (int i = 0; i < CLIENTS_NUMBER; i++) {
             clients.add(initializeClient(PORT));
         }
-        assertEquals(clients.get(0).executeList(TEST_DIRECTORY), EXPECTED_FILE_LIST);
-        assertEquals(clients.get(1).executeList(TEST_FAKE_DIRECTORY), new ArrayList<>());
-        assertEquals(clients.get(2).executeList(TEST_DOCUMENT), new ArrayList<>());
-        for (int i = 0; i < CLIENTS_NUMBER; i++) {
-            clients.get(i).disconnect();
+        try {
+            assertEquals(clients.get(0).executeList(TEST_DIRECTORY), EXPECTED_FILE_LIST);
+            assertEquals(clients.get(1).executeList(TEST_FAKE_DIRECTORY), new ArrayList<>());
+            assertEquals(clients.get(2).executeList(TEST_DOCUMENT), new ArrayList<>());
+            for (int i = 0; i < CLIENTS_NUMBER; i++) {
+                clients.get(i).disconnect();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
         server.stop();
+        try {
+            server.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

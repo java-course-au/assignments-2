@@ -11,50 +11,66 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FTPServer implements Server {
     private ServerSocket serverSocket;
+    private int port;
     private String rootPath;
+    private ExecutorService taskExecutor;
 
     public FTPServer(int port, String rootPath) {
+        this.port = port;
+        this.rootPath = rootPath;
+        taskExecutor = Executors.newCachedThreadPool();
+    }
+
+    @Override
+    public void start() {
         try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.rootPath = rootPath;
-    }
+        taskExecutor.submit(() -> {
 
-    @Override
-    public void start() {
-        new Thread(() -> {
             while (true) {
-                if (serverSocket == null || serverSocket.isClosed()) {
-                    break;
+                synchronized (this) {
+                    if (serverSocket == null || serverSocket.isClosed()) {
+                        break;
+                    }
                 }
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    new Thread(() -> handleClient(clientSocket)).start();
+                    taskExecutor.submit(() -> handleClient(clientSocket));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         if (serverSocket == null) {
             return;
         }
         try {
+            taskExecutor.shutdown();
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         serverSocket = null;
+    }
+
+    @Override
+    public void join() throws InterruptedException {
+        taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
     }
 
     private void handleClient(Socket socket) {
@@ -81,25 +97,25 @@ public class FTPServer implements Server {
             String path = rootPath + inputStream.readUTF();
             if (requestType == Constants.LIST_REQUEST) {
                 handleList(outputStream, path);
-            }
-            if (requestType == Constants.GET_REQUEST) {
-                handleGet(outputStream, path);
+            } else {
+                if (requestType == Constants.GET_REQUEST) {
+                    handleGet(outputStream, path);
+                } else {
+                    throw new UnsupportedOperationException();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void writeLong(DataOutputStream outputStream, long number) {
-        try {
-            outputStream.writeLong(number);
-            outputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void writeLong(DataOutputStream outputStream, long number) throws IOException {
+        outputStream.writeLong(number);
+        outputStream.flush();
     }
 
-    private Path checkAndGetPath(DataOutputStream outputStream, String path, Function<Path, Boolean> fileFilter) {
+    private Path checkAndGetPath(DataOutputStream outputStream, String path, Function<Path, Boolean> fileFilter)
+            throws IOException {
         Path p;
         try {
             p = Paths.get(path);
@@ -114,39 +130,30 @@ public class FTPServer implements Server {
         return p;
     }
 
-    private void handleList(DataOutputStream outputStream, String path) {
+    private void handleList(DataOutputStream outputStream, String path) throws IOException {
         Path p = checkAndGetPath(outputStream, path, Files::isDirectory);
         if (p == null) {
             return;
         }
-        try {
-            List<FileInfo> filesList = Files.list(p)
-                    .map(currentPath ->
-                            new FileInfo(currentPath.getFileName().toString(), Files.isDirectory(currentPath)))
-                    .collect(Collectors.toList());
-            outputStream.writeLong(filesList.size());
-            for (FileInfo fileInfo : filesList) {
-                outputStream.writeUTF(fileInfo.getName());
-                outputStream.writeBoolean(fileInfo.isDirectory());
-            }
-            outputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        List<FileInfo> filesList = Files.list(p)
+                .map(currentPath ->
+                        new FileInfo(currentPath.getFileName().toString(), Files.isDirectory(currentPath)))
+                .collect(Collectors.toList());
+        outputStream.writeLong(filesList.size());
+        for (FileInfo fileInfo : filesList) {
+            outputStream.writeUTF(fileInfo.getName());
+            outputStream.writeBoolean(fileInfo.isDirectory());
         }
+        outputStream.flush();
     }
 
-    private void handleGet(DataOutputStream outputStream, String path) {
+    private void handleGet(DataOutputStream outputStream, String path) throws IOException {
         Path p = checkAndGetPath(outputStream, path, Files::isRegularFile);
         if (p == null) {
             return;
         }
-        try {
-            outputStream.writeLong(Files.size(p));
-            Files.copy(p, outputStream);
-            outputStream.flush();
-        } catch (IOException e) {
-            writeLong(outputStream, 0);
-            e.printStackTrace();
-        }
+        outputStream.writeLong(Files.size(p));
+        Files.copy(p, outputStream);
+        outputStream.flush();
     }
 }

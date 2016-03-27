@@ -1,7 +1,7 @@
 package ru.spbau.mit;
 
 public class FileInfo {
-    private static final int P = (int) 1e9 + 7;
+    private static final int P = 31;
 
     private String name;
     private boolean isDirectory;
