@@ -46,6 +46,16 @@ public class Tests extends TestCase {
         client.close();
     }
 
+    String readFromStream(InputStream is) throws IOException {
+        String val = "";
+        int currentVal = is.read();
+        while (currentVal != -1) {
+            val += ((char) currentVal);
+            currentVal = is.read();
+        }
+        return val;
+    }
+
     @Test
     public void testGet() throws IOException {
         Path path = Files.createTempDirectory("FTP");
@@ -59,15 +69,26 @@ public class Tests extends TestCase {
         writer.close();
 
         InputStream is = client.get(path.toString() + File.separator + "tmp");
-        String val = "";
-        int currentVal = is.read();
-        while (currentVal != -1) {
-            val += ((char) currentVal);
-            currentVal = is.read();
-        }
-
-        assertEquals(val, fileString);
+        assertEquals(readFromStream(is), fileString);
     }
+
+    @Test
+    public void testGetEmptyFile() throws IOException {
+        Path path = Files.createTempDirectory("FTP");
+        File file = new File(path.toString() + File.separator + "tmp");
+
+        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        assertEquals(readFromStream(is), "");
+    }
+
+    @Test
+    public void testGetFileDoesNotExists() throws IOException {
+        Path path = Files.createTempDirectory("FTP");
+
+        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        assertEquals(readFromStream(is), "");
+    }
+
 
     @Test
     public void testList() throws IOException {
@@ -92,6 +113,26 @@ public class Tests extends TestCase {
         lsSet.addAll(ls);
 
         assertTrue(lsSet.containsAll(setOfFiles));
+        new File(path.toString()).delete();
+    }
+
+    @Test
+    public void testListEmpty() throws IOException {
+        Path path = Files.createTempDirectory("FTP");
+
+        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        assertEquals(ls.size(), 0);
+
+        new File(path.toString()).delete();
+    }
+
+    @Test
+    public void testListFileDoesNotExists() throws IOException {
+        Path path = Files.createTempDirectory("FTP");
+
+        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        assertEquals(ls.size(), 0);
+
         new File(path.toString()).delete();
     }
 }
