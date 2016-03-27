@@ -15,11 +15,15 @@ public class Server {
 
     private static final int BUFFER_SIZE = 2 * 1024 * 1024;
 
-    public Server(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
+    private final int port;
+
+    public Server(int port) {
+        this.port = port;
     }
 
-    public void start() {
+    public Thread start() throws IOException {
+        serverSocket = new ServerSocket(port);
+
         Thread thread = new Thread(() -> {
             try {
                 catchSocket();
@@ -28,6 +32,7 @@ public class Server {
             }
         });
         thread.start();
+        return thread;
     }
 
     public synchronized void stop() {

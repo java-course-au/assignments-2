@@ -29,13 +29,12 @@ public class Tests extends TestCase {
         while (true) {
             try {
                 server = new Server(port);
+                server.start();
                 break;
             } catch (BindException e) {
                 port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
             }
         }
-
-        server.start();
 
         client = new Client("localhost", port);
     }
