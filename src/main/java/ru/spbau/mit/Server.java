@@ -84,7 +84,7 @@ public class Server {
         }
     }
 
-    private void handlingListQuery(String path, DataOutputStream dos) throws IOException {
+    private static void handlingListQuery(String path, DataOutputStream dos) throws IOException {
         File f = new File(path);
         if (f.isDirectory()) {
             File[] fileList = f.listFiles();
@@ -102,7 +102,7 @@ public class Server {
         }
     }
 
-    private void handlingGetQuery(String path, DataOutputStream dos) throws IOException {
+    private static void handlingGetQuery(String path, DataOutputStream dos) throws IOException {
         File f = new File(path);
         if (f.exists() && !f.isDirectory() && f.canRead()) {
             dos.writeLong(f.length());
