@@ -40,11 +40,6 @@ public class Server {
     }
 
     private Socket accept() throws IOException {
-        synchronized (this) {
-            if (serverSocket.isClosed()) {
-                return null;
-            }
-        }
         try {
             return serverSocket.accept();
         } catch (SocketException e) {
