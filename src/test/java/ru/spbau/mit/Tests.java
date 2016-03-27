@@ -58,19 +58,6 @@ public class Tests extends TestCase {
 
         writer.close();
 
-        OutputStream output = new OutputStream() {
-            private StringBuilder string = new StringBuilder();
-
-            @Override
-            public void write(int b) throws IOException {
-                this.string.append((char) b);
-            }
-
-            public String toString() {
-                return this.string.toString();
-            }
-        };
-
         InputStream is = client.get(path.toString() + File.separator + "tmp");
         String val = "";
         int currentVal = is.read();
