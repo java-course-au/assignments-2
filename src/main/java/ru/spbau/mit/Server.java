@@ -58,7 +58,7 @@ public class Server {
             Socket socket = accept();
             if (socket != null) {
                 Thread thread = new Thread(() -> {
-                    decodeSocket(socket);
+                    handlingQuery(socket);
                 });
                 thread.start();
             } else {
@@ -67,7 +67,7 @@ public class Server {
         }
     }
 
-    private void decodeSocket(Socket socket) {
+    private void handlingQuery(Socket socket) {
         try {
             DataInputStream dis = new DataInputStream(socket.getInputStream());
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
