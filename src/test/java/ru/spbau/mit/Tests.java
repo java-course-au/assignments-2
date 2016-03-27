@@ -1,5 +1,6 @@
 package ru.spbau.mit;
 
+import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.io.*;
@@ -11,13 +12,39 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-
-public class Tests {
+public class Tests extends TestCase {
     private static final int MAX_PORT = 20000;
     private static final int MIN_PORT = 10000;
     private static final int CNT_DIR = 4;
+
+    private Server server;
+    private Client client;
+
+    @Override
+    public void setUp() throws IOException {
+        int port = 0;
+        Random rnd = new Random();
+        port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
+
+        while (true) {
+            try {
+                server = new Server(port);
+                break;
+            } catch (BindException e) {
+                port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
+            }
+        }
+
+        server.start();
+
+        client = new Client("localhost", port);
+    }
+
+    @Override
+    public void tearDown() {
+        server.stop();
+        client.close();
+    }
 
     @Test
     public void testGet() throws IOException {
@@ -44,38 +71,15 @@ public class Tests {
             }
         };
 
-        int port = 0;
-        Random rnd = new Random();
-        port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
-
-        Server server;
-        while (true) {
-            try {
-                server = new Server(port);
-                break;
-            } catch (BindException e) {
-                port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
-            }
+        InputStream is = client.get(path.toString() + File.separator + "tmp");
+        String val = "";
+        int currentVal = is.read();
+        while (currentVal != -1) {
+            val += ((char) currentVal);
+            currentVal = is.read();
         }
 
-        server.start();
-
-        Client client = new Client("localhost", port);
-
-        try {
-            InputStream is = client.get(path.toString() + File.separator + "tmp");
-            String val = "";
-            int currentVal = is.read();
-            while (currentVal != -1) {
-                val += ((char) currentVal);
-                currentVal = is.read();
-            }
-
-            assertEquals(val, fileString);
-        } finally {
-            server.stop();
-            client.close();
-        }
+        assertEquals(val, fileString);
     }
 
     @Test
@@ -94,36 +98,13 @@ public class Tests {
             setOfFiles.add(new Client.FileEntry(filesNames[i], false));
         }
 
-        int port = 0;
-        Random rnd = new Random();
-        port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
+        ArrayList<Client.FileEntry> ls = client.list(path.toString());
+        assertEquals(ls.size(), filesNames.length);
 
-        Server server;
-        while (true) {
-            try {
-                server = new Server(port);
-                break;
-            } catch (BindException e) {
-                port = rnd.nextInt(MAX_PORT - MIN_PORT) + MIN_PORT;
-            }
-        }
+        Set<Client.FileEntry> lsSet = new HashSet<>();
+        lsSet.addAll(ls);
 
-        server.start();
-
-        Client client = new Client("localhost", port);
-
-        try {
-            ArrayList<Client.FileEntry> ls = client.list(path.toString());
-            assertEquals(ls.size(), filesNames.length);
-
-            Set<Client.FileEntry> lsSet = new HashSet<>();
-            lsSet.addAll(ls);
-
-            assertTrue(lsSet.containsAll(setOfFiles));
-            new File(path.toString()).delete();
-        } finally {
-            server.stop();
-            client.close();
-        }
+        assertTrue(lsSet.containsAll(setOfFiles));
+        new File(path.toString()).delete();
     }
 }
