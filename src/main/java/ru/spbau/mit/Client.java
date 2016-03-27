@@ -34,9 +34,7 @@ public class Client {
         int size = dis.readInt();
         ArrayList<FileEntry> listOfFile = new ArrayList<>();
         for (int i = 0; i < size; ++i) {
-            FileEntry file = new FileEntry();
-            file.name = dis.readUTF();
-            file.isDir = dis.readBoolean();
+            FileEntry file = new FileEntry(dis.readUTF(), dis.readBoolean());
             listOfFile.add(file);
         }
         return listOfFile;
@@ -53,9 +51,16 @@ public class Client {
         return new ServerInputStream(dis, size);
     }
 
-    public class FileEntry {
+    public static class FileEntry {
         private String name;
         private Boolean isDir;
+        private static final int PRIME = 179;
+
+
+        public FileEntry(String name, Boolean isDir) {
+            this.name = name;
+            this.isDir = isDir;
+        }
 
         public Boolean getDir() {
             return isDir;
@@ -71,6 +76,30 @@ public class Client {
 
         public void setDir(Boolean dir) {
             isDir = dir;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+            if (other == null) {
+                return false;
+            }
+            if (getClass() != other.getClass()) {
+                return false;
+            }
+            FileEntry oth = (FileEntry) other;
+            return oth.getName().equals(this.name) && oth.getDir().equals(this.isDir);
+        }
+
+        @Override
+        public int hashCode() {
+            if (isDir) {
+                return name.hashCode() * PRIME + 1;
+            } else {
+                return name.hashCode() * PRIME;
+            }
         }
     }
 

@@ -7,9 +7,11 @@ import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 public class Tests {
@@ -80,12 +82,16 @@ public class Tests {
     public void testList() throws IOException {
         String[] fileName = new String[]{"dir1", "dir2", "dir3", "dir4", "file1", "file2", "file3", "file4"};
 
+        Set<Client.FileEntry> setOfFiles = new HashSet<Client.FileEntry>();
+
         Path path = Files.createTempDirectory("FTP");
         for (int i = 0; i < CNT_DIR; ++i) {
             (new File(path.toString() + File.separator + fileName[i])).mkdir();
+            setOfFiles.add(new Client.FileEntry(fileName[i], true));
         }
         for (int i = CNT_DIR; i < fileName.length; ++i) {
             (new File(path.toString() + File.separator + fileName[i])).createNewFile();
+            setOfFiles.add(new Client.FileEntry(fileName[i], false));
         }
 
         int port = 0;
@@ -109,26 +115,11 @@ public class Tests {
         try {
             ArrayList<Client.FileEntry> ls = client.list(path.toString());
             assertEquals(ls.size(), fileName.length);
-            ls.sort(new Comparator<Client.FileEntry>() {
-                @Override
-                public int compare(Client.FileEntry o1, Client.FileEntry o2) {
-                    return o1.getName().compareTo(o2.getName());
-                }
-            });
 
-            for (int i = 0; i < CNT_DIR; ++i) {
-                assertEquals(ls.get(i).getDir(), true);
-            }
+            Set<Client.FileEntry> lsSet = new HashSet<>();
+            lsSet.addAll(ls);
 
-
-            for (int i = CNT_DIR; i < fileName.length; ++i) {
-                assertEquals(ls.get(i).getDir(), false);
-            }
-
-            for (int i = 0; i < fileName.length; ++i) {
-                assertEquals(ls.get(i).getName(), fileName[i]);
-            }
-
+            assertTrue(lsSet.containsAll(setOfFiles));
             new File(path.toString()).delete();
         } finally {
             server.stop();
