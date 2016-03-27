@@ -56,10 +56,7 @@ public class Server {
         while (true) {
             Socket socket = accept();
             if (socket != null) {
-                Thread thread = new Thread(() -> {
-                    handlingQuery(socket);
-                });
-                thread.start();
+                handlingQuery(socket);
             } else {
                 return;
             }
