@@ -17,12 +17,15 @@ public class FTPServer {
     public static final int LIST = 1;
     public static final int GET = 2;
     private static final int NOT_EXISTS = 0;
-    private final ServerSocket serverSocket;
+    private ServerSocket serverSocket;
     private int port;
     private Thread workThread;
 
-    public FTPServer(int portNumber) throws IOException {
+    public FTPServer(int portNumber) {
         port = portNumber;
+    }
+
+    public void startUp() throws IOException {
         serverSocket = new ServerSocket(port);
         workThread = new Thread(() -> {
             while (!Thread.interrupted()) {
@@ -71,21 +74,20 @@ public class FTPServer {
     }
 
     private void processClient(Socket clientSocket) throws IOException {
-        DataInputStream input = new DataInputStream(clientSocket.getInputStream());
-        DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
+        try (
+            DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+            DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
+        ) {
+            int requestType = input.readInt();
+            String path = input.readUTF();
 
-        try {
-            while (true) {
-                int requestType = input.readInt();
-                String path = input.readUTF();
-
-                if (requestType == LIST) {
-                    list(output, path);
-                } else if (requestType == GET) {
-                    get(output, path);
-                }
+            if (requestType == LIST) {
+                list(output, path);
+            } else if (requestType == GET) {
+                get(output, path);
             }
         } catch (IOException e) {
+            Logger.getAnonymousLogger().info(e.getMessage());
             clientSocket.close();
         }
     }

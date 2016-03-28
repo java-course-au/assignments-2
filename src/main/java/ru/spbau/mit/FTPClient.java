@@ -31,15 +31,15 @@ public class FTPClient {
         return input;
     }
 
-    public ListResponse listRequestWrapper(int requestType, String requestBody) throws IOException {
-        return new ListResponse(new DataInputStream(makeRequest(requestType, requestBody)));
+    public ListResponse wrapListRequest(String requestBody) throws IOException {
+        return new ListResponse(new DataInputStream(makeRequest(LIST, requestBody)));
     }
 
-    public File getRequestWrapper(int requestType, String requestBody) throws IOException {
+    public DataInputStream wrapGetRequest(String requestBody) throws IOException {
         File whereToSave = Files.createTempFile("get_response", "").toFile();
-        processGetRequest((DataInputStream) makeRequest(requestType, requestBody),
+        processGetRequest((DataInputStream) makeRequest(GET, requestBody),
                 new FileOutputStream(whereToSave));
-        return whereToSave;
+        return new DataInputStream(new FileInputStream(whereToSave));
     }
 
     private void processGetRequest(DataInputStream input, OutputStream output) throws IOException {

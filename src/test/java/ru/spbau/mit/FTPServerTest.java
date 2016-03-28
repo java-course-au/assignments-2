@@ -2,63 +2,47 @@ package ru.spbau.mit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
 public class FTPServerTest {
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     private static final int TEST_FILES_NUM = 4;
-    private static final HashMap<String, Boolean> PATHS = new HashMap<>();
     private FTPServer server;
     private FTPClient client;
 
-    private static String createTestDir() throws IOException {
-        PATHS.clear();
-
-        Path dir;
-        try {
-            dir = Files.createTempDirectory("TEST_DIR");
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    private void fillTempDir(HashMap<String, Boolean> paths) throws IOException {
         for (int i = 0; i < TEST_FILES_NUM; i++) {
-            Path file;
+            File file;
             try {
-                file = Files.createTempFile(dir, Integer.toString(i), "");
+                file = folder.newFile();
+//                file = Files.createTempFile(folder, Integer.toString(i), "");
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
             byte[] a = {0};
-            Files.write(file, a);
-            PATHS.put(file.toString(), false);
+            Files.write(file.toPath(), a);
+            paths.put(file.getPath(), false);
         }
-        return dir.toString();
-    }
-
-    private static void deleteTestDir(String path) throws IOException {
-        File cur = new File(path);
-        if (cur.isDirectory()) {
-            for (File file : cur.listFiles()) {
-                deleteTestDir(file.getPath());
-            }
-        }
-        Files.delete(Paths.get(path));
     }
 
     @Before
     public void initServerClient() throws IOException {
         server = new FTPServer(FTPServer.SERVER_DEFAULT_PORT);
+        server.startUp();
         client = new FTPClient("localhost", FTPServer.SERVER_DEFAULT_PORT);
     }
 
@@ -69,39 +53,39 @@ public class FTPServerTest {
     }
 
     @Test
-    public void testMultipleQueries() throws Exception {
+    public void testListRequest() throws Exception {
         assertEquals(0,
-                (client.listRequestWrapper(FTPClient.LIST, "kdjfhgfdjshfg")).getSize());
+                (client.wrapListRequest("kdjfhgfdjshfg")).getSize());
+    }
 
-        File resFile = client.getRequestWrapper(FTPClient.GET, "dfkjghfkjghfj");
+    @Test
+    public void testGetRequest() throws Exception {
         assertEquals(
                 0,
-                new DataInputStream(new FileInputStream(resFile)).readInt()
+                client.wrapGetRequest("dfkjghfkjghfj").readInt()
         );
-        Files.delete(resFile.toPath());
     }
 
     @Test
     public void testNonEmptyFolderListing() throws IOException, InterruptedException {
-        String dir = createTestDir();
-        assertEquals(PATHS,
-                (client.listRequestWrapper(FTPClient.LIST, dir)).getFilesList());
-        deleteTestDir(dir);
+        HashMap<String, Boolean> paths = new HashMap<>();
+        fillTempDir(paths);
+        assertEquals(paths,
+                (client.wrapListRequest(folder.getRoot().getPath())).getFilesList());
     }
 
     @Test
     public void testGetFileContent() throws IOException, InterruptedException {
-        String dir = createTestDir();
-        for (Map.Entry<String, Boolean> entry : PATHS.entrySet()) {
-            File resFile = client.getRequestWrapper(FTPClient.GET, entry.getKey());
-            DataInputStream input = new DataInputStream(new FileInputStream(resFile));
+        HashMap<String, Boolean> paths = new HashMap<>();
+        fillTempDir(paths);
+        Set<Map.Entry<String, Boolean>> entries = paths.entrySet();
+        if (entries.size() > 0) {
+            DataInputStream input = client.wrapGetRequest(entries.iterator().next().getKey());
             input.readInt();
             byte[] response = new byte[1];
             input.read(response);
             assertEquals((byte) 0, response[0]);
-            Files.delete(resFile.toPath());
         }
-        deleteTestDir(dir);
     }
 
     @Test
