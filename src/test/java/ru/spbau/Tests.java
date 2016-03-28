@@ -1,13 +1,16 @@
 package ru.spbau;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Created by rebryk on 10/03/16.
@@ -16,12 +19,14 @@ public class Tests {
     public static final int PORT = 1024;
     public static final String HOSTNAME = "localhost";
 
-    public static final String DIR_PATH = "/Users/rebryk/Desktop/";
-    public static final String FILE_PATH = "/Users/rebryk/Desktop/1.png";
+    public static final String DIR_PATH = "src/test/resources/test";
+    public static final String FILE_PATH = "src/test/resources/test/1.png";
 
     public static final int CLIENTS_COUNT = 5;
+
+
     @Test
-    public void testGetListSingleThread() {
+    public void testGetListSingleThread() throws IOException {
         FtpServer server = new FtpServer(PORT);
         FtpClient client = new FtpClient(HOSTNAME, PORT);
 
@@ -31,28 +36,23 @@ public class Tests {
         List<String> list = client.getList(DIR_PATH);
         Assert.assertNotNull(list);
 
-        list = client.getList(FILE_PATH);
-        Assert.assertNull(list);
-
         server.stop();
         client.stop();
     }
 
     @Test
-    public void testGetFileSingleThread() {
+    public void testGetFileSingleThread() throws IOException {
         FtpServer server = new FtpServer(PORT);
         FtpClient client = new FtpClient(HOSTNAME, PORT);
 
         server.start();
         client.start();
 
-        ByteArrayOutputStream data = client.getFile(DIR_PATH);
-        Assert.assertNull(data);
+        InputStream file = Files.newInputStream(Paths.get(FILE_PATH));
+        InputStream data = client.getFile(FILE_PATH);
 
-        File file = new File(FILE_PATH);
-        data = client.getFile(FILE_PATH);
         Assert.assertNotNull(data);
-        Assert.assertEquals((long) data.size(), file.length());
+        assertArrayEquals(IOUtils.toByteArray(file), IOUtils.toByteArray(data));
 
         server.stop();
         client.stop();
@@ -70,9 +70,13 @@ public class Tests {
                     FtpClient client = new FtpClient(HOSTNAME, PORT);
                     client.start();
 
-                    List<String> list = client.getList(DIR_PATH);
+                    List<String> list = null;
+                    try {
+                        list = client.getList(DIR_PATH);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     Assert.assertNotNull(list);
-
                     client.stop();
                 }));
         }
@@ -89,7 +93,4 @@ public class Tests {
 
         server.stop();
     }
-
-
-
 }

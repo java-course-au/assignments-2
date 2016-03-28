@@ -5,11 +5,15 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.input.BoundedInputStream;
+
 /**
  * Created by rebryk on 10/03/16.
  */
+
 public class FtpClient {
-    private static final int BUFFER_SIZE = 4096;
+    private static final int QUERY_GET_LIST = 1;
+    private static final int QUERY_GET_FILE = 2;
 
     private final String hostname;
     private final int port;
@@ -43,52 +47,40 @@ public class FtpClient {
         }
     }
 
-    public List<String> getList(final String path) {
+    public List<String> getList(final String path) throws IOException {
         List<String> list = null;
 
-        try {
-            outStream.writeInt(1);
-            outStream.writeUTF(path);
+        outStream.writeInt(QUERY_GET_LIST);
+        outStream.writeUTF(path);
+        outStream.flush();
 
-            String status = inStream.readUTF();
-            if (status.equals("Ok")) {
-                list = new ArrayList<>();
-                int filesCount = inStream.readInt();
-                for (int i = 0; i < filesCount; ++i) {
-                    list.add(inStream.readUTF() + " " + inStream.readUTF());
-                }
-            } else {
-                System.out.println(status);
+        String status = inStream.readUTF();
+        if (status.equals("Ok")) {
+            list = new ArrayList<>();
+            int filesCount = inStream.readInt();
+            for (int i = 0; i < filesCount; ++i) {
+                list.add(inStream.readUTF() + " " + inStream.readUTF());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            System.out.println(status);
         }
 
         return list;
     }
 
-    public ByteArrayOutputStream getFile(final String path) {
-        ByteArrayOutputStream file = null;
-        try {
-            outStream.writeInt(2);
-            outStream.writeUTF(path);
+    public InputStream getFile(final String path) throws IOException {
+        outStream.writeInt(QUERY_GET_FILE);
+        outStream.writeUTF(path);
+        outStream.flush();
 
-            String status = inStream.readUTF();
-            if (status.equals("Ok")) {
-                file = new ByteArrayOutputStream();
-                long packetsCount = inStream.readLong();
-                byte[] data = new byte[BUFFER_SIZE];
-                for (int i = 0; i < packetsCount; ++i) {
-                    int count = inStream.read(data);
-                    file.write(data, 0, count);
-                }
-                file.close();
-            } else {
-                System.out.println(status);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        String status = inStream.readUTF();
+        if (status.equals("Ok")) {
+            long size = inStream.readLong();
+            return new BoundedInputStream(inStream, size);
+        } else {
+            System.out.println(status);
         }
-        return file;
+
+        return null;
     }
 }

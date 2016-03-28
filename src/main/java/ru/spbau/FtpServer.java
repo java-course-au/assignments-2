@@ -2,26 +2,33 @@ package ru.spbau;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by rebryk on 10/03/16.
  */
 
 public class FtpServer {
+    private static final int QUERY_GET_LIST = 1;
+    private static final int QUERY_GET_FILE = 2;
+
     private final int port;
     private ServerSocket serverSocket;
+    private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private Thread listeningThread;
     private boolean isRunning;
 
-    private List<Thread> threadList;
+    private List<Socket> clients;
 
     public FtpServer(int port) {
         this.port = port;
-        threadList = new ArrayList<>();
+        clients = new ArrayList<>();
         listeningThread = new Thread(new ListenHandler(this));
     }
 
@@ -34,20 +41,23 @@ public class FtpServer {
         try {
             isRunning = false;
             listeningThread.join();
-            threadList.forEach(Thread::interrupt);
-            for (Thread thread: threadList) {
-                thread.join();
+
+            for (Socket client : clients) {
+                client.close();
             }
+
+            threadPool.shutdown();
+
             System.out.println("FtpServer: stopped.");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private class ListenHandler implements Runnable {
+    private final class ListenHandler implements Runnable {
         private final FtpServer server;
 
-        public ListenHandler(FtpServer server) {
+        private ListenHandler(FtpServer server) {
             this.server = server;
         }
 
@@ -56,15 +66,16 @@ public class FtpServer {
             try {
                 server.serverSocket = new ServerSocket(server.port);
                 server.serverSocket.setSoTimeout(1000);
+
                 System.out.println("ListenHandler: serverSocket was opened.");
 
                 while (server.isRunning) {
                     try {
                         Socket clientSocket = serverSocket.accept();
+                        clients.add(clientSocket);
+                        threadPool.submit(new ClientHandler(server, clientSocket));
+
                         System.out.println("ListenHandler: socket was accepted.");
-                        Thread thread = new Thread(new ClientHandler(server, clientSocket));
-                        server.threadList.add(thread);
-                        thread.start();
                     } catch (SocketTimeoutException e) {
                         // try again...
                     }
@@ -78,13 +89,13 @@ public class FtpServer {
         }
     }
 
-    private class ClientHandler implements Runnable {
+    private final class ClientHandler implements Runnable {
         private static final int BUFFER_SIZE = 4096;
 
         private final FtpServer server;
         private final Socket socket;
 
-        public ClientHandler(FtpServer server, Socket socket) {
+        private ClientHandler(FtpServer server, Socket socket) {
             this.server = server;
             this.socket = socket;
         }
@@ -122,18 +133,13 @@ public class FtpServer {
                 } else {
                     outStream.writeUTF("Ok");
 
-                    long packetsCount = file.length() / BUFFER_SIZE;
-                    if (packetsCount * BUFFER_SIZE < file.length()) {
-                        ++packetsCount;
-                    }
-
-                    outStream.writeLong(packetsCount);
-
-                    InputStream in = new FileInputStream(file);
+                    outStream.writeLong(file.length());
+                    BufferedInputStream fileContent = new BufferedInputStream(Files.newInputStream(file.toPath()));
                     byte[] buffer = new byte[BUFFER_SIZE];
-                    int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        outStream.write(buffer, 0, read);
+                    while (fileContent.available() > 0) {
+                        int len = fileContent.read(buffer, 0, BUFFER_SIZE);
+                        outStream.write(buffer, 0, len);
+                        outStream.flush();
                     }
                 }
             } catch (IOException e) {
@@ -160,9 +166,9 @@ public class FtpServer {
                             int type = inStream.readInt();
                             String path = inStream.readUTF();
 
-                            if (type == 1) {
+                            if (type == QUERY_GET_LIST) {
                                 getList(path, outStream);
-                            } else if (type == 2) {
+                            } else if (type == QUERY_GET_FILE) {
                                 getFile(path, outStream);
                             }
                         }
