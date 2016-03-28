@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 
 public class Main {
-    private static final String path = "/Users/rebryk/test";
+    private static final String path = "src";
 
     public static void runHasher(final Hasher hasher) {
         long start = System.currentTimeMillis();
