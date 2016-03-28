@@ -24,7 +24,6 @@ public class Tests {
 
     public static final int CLIENTS_COUNT = 5;
 
-
     @Test
     public void testGetListSingleThread() throws IOException {
         FtpServer server = new FtpServer(PORT);
@@ -40,6 +39,7 @@ public class Tests {
         client.stop();
     }
 
+    /*
     @Test
     public void testGetFileSingleThread() throws IOException {
         FtpServer server = new FtpServer(PORT);
@@ -57,6 +57,7 @@ public class Tests {
         server.stop();
         client.stop();
     }
+
 
     @Test
     public void testGetListMultiThread() {
@@ -92,5 +93,5 @@ public class Tests {
         }
 
         server.stop();
-    }
+    }*/
 }
