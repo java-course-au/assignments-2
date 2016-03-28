@@ -1,16 +1,10 @@
 package ru.spbau;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Created by rebryk on 10/03/16.
@@ -20,9 +14,6 @@ public class Tests {
     public static final String HOSTNAME = "localhost";
 
     public static final String DIR_PATH = "src/test/resources/test";
-    public static final String FILE_PATH = "src/test/resources/test/1.png";
-
-    public static final int CLIENTS_COUNT = 5;
 
     @Test
     public void testGetListSingleThread() throws IOException {
