@@ -17,7 +17,10 @@ import static org.junit.Assert.assertArrayEquals;
  * Created by rebryk on 10/03/16.
  */
 public class Tests {
-    public static final int PORT = 5000;
+    public static final int PORT1 = 5000;
+    public static final int PORT2 = 5001;
+    public static final int PORT3 = 5002;
+
     public static final String HOSTNAME = "localhost";
 
     public static final String DIR_PATH = "src/test/resources/test";
@@ -27,8 +30,8 @@ public class Tests {
 
     @Test
     public void testGetListSingleThread() throws IOException {
-        FtpServer server = new FtpServer(PORT - 1);
-        FtpClient client = new FtpClient(HOSTNAME, PORT - 1);
+        FtpServer server = new FtpServer(PORT1);
+        FtpClient client = new FtpClient(HOSTNAME, PORT1);
 
         server.start();
         client.start();
@@ -43,8 +46,8 @@ public class Tests {
 
     @Test
     public void testGetFileSingleThread() throws IOException {
-        FtpServer server = new FtpServer(PORT);
-        FtpClient client = new FtpClient(HOSTNAME, PORT);
+        FtpServer server = new FtpServer(PORT2);
+        FtpClient client = new FtpClient(HOSTNAME, PORT2);
 
         server.start();
         client.start();
@@ -61,14 +64,14 @@ public class Tests {
 
     @Test
     public void testGetListMultiThread() {
-        FtpServer server = new FtpServer(PORT + 1);
+        FtpServer server = new FtpServer(PORT3);
 
         server.start();
 
         List<Thread> clients = new ArrayList<>();
         for (int i = 0; i < CLIENTS_COUNT; ++i) {
             clients.add(new Thread(() -> {
-                    FtpClient client = new FtpClient(HOSTNAME, PORT + 1);
+                    FtpClient client = new FtpClient(HOSTNAME, PORT3);
                     client.start();
 
                     List<String> list = null;

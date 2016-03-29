@@ -69,6 +69,10 @@ public class FtpClient {
     }
 
     public InputStream getFile(final String path) throws IOException {
+        if (outStream == null) {
+            System.out.println("outStream = null");
+            return null;
+        }
         outStream.writeInt(QUERY_GET_FILE);
         outStream.writeUTF(path);
         outStream.flush();
