@@ -17,7 +17,6 @@ import static org.junit.Assert.assertArrayEquals;
  * Created by rebryk on 10/03/16.
  */
 public class Tests {
-    public static final int PORT1 = 5000;
     public static final int PORT2 = 5001;
     public static final int PORT3 = 5002;
 
@@ -28,6 +27,7 @@ public class Tests {
 
     public static final int CLIENTS_COUNT = 5;
 
+    /*
     @Test
     public void testGetListSingleThread() throws IOException {
         FtpServer server = new FtpServer(PORT1);
@@ -41,7 +41,7 @@ public class Tests {
 
         server.stop();
         client.stop();
-    }
+    }*/
 
 
     @Test
