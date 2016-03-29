@@ -17,7 +17,7 @@ import static org.junit.Assert.assertArrayEquals;
  * Created by rebryk on 10/03/16.
  */
 public class Tests {
-    public static final int PORT = 1024;
+    public static final int PORT = 5000;
     public static final String HOSTNAME = "localhost";
 
     public static final String DIR_PATH = "src/test/resources/test";
@@ -27,8 +27,8 @@ public class Tests {
 
     @Test
     public void testGetListSingleThread() throws IOException {
-        FtpServer server = new FtpServer(PORT);
-        FtpClient client = new FtpClient(HOSTNAME, PORT);
+        FtpServer server = new FtpServer(PORT - 1);
+        FtpClient client = new FtpClient(HOSTNAME, PORT - 1);
 
         server.start();
         client.start();
@@ -61,14 +61,14 @@ public class Tests {
 
     @Test
     public void testGetListMultiThread() {
-        FtpServer server = new FtpServer(PORT);
+        FtpServer server = new FtpServer(PORT + 1);
 
         server.start();
 
         List<Thread> clients = new ArrayList<>();
         for (int i = 0; i < CLIENTS_COUNT; ++i) {
             clients.add(new Thread(() -> {
-                    FtpClient client = new FtpClient(HOSTNAME, PORT);
+                    FtpClient client = new FtpClient(HOSTNAME, PORT + 1);
                     client.start();
 
                     List<String> list = null;
