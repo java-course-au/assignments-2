@@ -29,7 +29,6 @@ public class FTPServerTest {
             File file;
             try {
                 file = folder.newFile();
-//                file = Files.createTempFile(folder, Integer.toString(i), "");
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
