@@ -3,9 +3,7 @@ package ru.spbau;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,11 +22,8 @@ public class FtpServer {
     private Thread listeningThread;
     private boolean isRunning;
 
-    private List<Socket> clients;
-
     public FtpServer(int port) {
         this.port = port;
-        clients = new ArrayList<>();
         listeningThread = new Thread(new ListenHandler(this));
     }
 
@@ -41,15 +36,10 @@ public class FtpServer {
         try {
             isRunning = false;
             listeningThread.join();
-
-            for (Socket client : clients) {
-                client.close();
-            }
-
             threadPool.shutdown();
 
             System.out.println("FtpServer: stopped.");
-        } catch (InterruptedException | IOException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -72,9 +62,7 @@ public class FtpServer {
                 while (server.isRunning) {
                     try {
                         Socket clientSocket = serverSocket.accept();
-                        clients.add(clientSocket);
                         threadPool.submit(new ClientHandler(server, clientSocket));
-
                         System.out.println("ListenHandler: socket was accepted.");
                     } catch (SocketTimeoutException e) {
                         // try again...
