@@ -55,13 +55,13 @@ public class DirCheckSum {
         }
     }
 
-    public class CheckSumForkJoin<T> implements CheckSum {
-
-        @Override
-        public String checkSum(String dirname) {
-            return null;
-        }
-    }
+//    public class CheckSumForkJoin<T> implements CheckSum {
+//
+//        @Override
+//        public String checkSum(String dirname) {
+//            return null;
+//        }
+//    }
 }
 
 /*
