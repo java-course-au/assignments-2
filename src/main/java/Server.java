@@ -13,9 +13,10 @@ public class Server implements AutoCloseable {
     private final int GET_QUERY = 1;
     private final int LIST_QUERY = 2;
     private ServerSocket serverSocket;
+    private int portNumber;
 
     public Server(int portNumber) {
-        start(portNumber);
+        this.portNumber = portNumber;
     }
 
     public void close() {
@@ -24,6 +25,21 @@ public class Server implements AutoCloseable {
                 serverSocket.close();
             }
         } catch (IOException ignored) { }
+    }
+
+    public void start() {
+        try {
+            serverSocket = new ServerSocket(portNumber);
+        } catch (IOException e) {
+            return;
+        }
+        (new Thread(() -> {
+            try {
+                connectionCatcher();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        })).start();
     }
 
     public void connectionCatcher() {
@@ -60,21 +76,6 @@ public class Server implements AutoCloseable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void start(int portNumber) {
-        try {
-            serverSocket = new ServerSocket(portNumber);
-        } catch (IOException e) {
-            return;
-        }
-        (new Thread(() -> {
-            try {
-                connectionCatcher();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        })).start();
     }
 
     private void getFileContent(Connection curConnection) throws IOException {

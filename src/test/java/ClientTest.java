@@ -1,3 +1,5 @@
+import jdk.Exported;
+import org.junit.Test;
 import junit.framework.TestCase;
 
 import java.io.*;
@@ -17,8 +19,9 @@ public class ClientTest extends TestCase {
     private static final int PORT = 20005;
     private static final String TEST_STRING = "Hello!";
 
-    public void testGet() throws Exception {
+    public void testGet() throws IOException {
         try (Server testServer = new Server(PORT)) {
+            testServer.start();
             Client testClient = new Client(HOST, PORT);
             File pathOut;
             File pathIn;
@@ -55,7 +58,7 @@ public class ClientTest extends TestCase {
 
     public void testList() throws Exception {
         try (Server testServer = new Server(PORT + 1)) {
-
+            testServer.start();
             final int countOfFiles = 5;
 
             Client testClient = new Client(HOST, PORT + 1);

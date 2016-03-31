@@ -22,6 +22,7 @@ public abstract class ServerMain {
                 return;
             }
             Server server = new Server(port);
+            server.start();
             System.out.println("Accept!");
         }
     }
