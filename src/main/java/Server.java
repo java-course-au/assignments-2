@@ -14,16 +14,16 @@ public class Server implements AutoCloseable {
     private final int LIST_QUERY = 2;
     private ServerSocket serverSocket;
 
+    public Server(int portNumber) {
+        start(portNumber);
+    }
+
     public void close() {
         try {
             if (serverSocket != null) {
                 serverSocket.close();
             }
         } catch (IOException ignored) { }
-    }
-
-    public Server(int portNumber) {
-        start(portNumber);
     }
 
     public void connectionCatcher() {
