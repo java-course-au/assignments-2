@@ -17,15 +17,15 @@ public class Connection implements AutoCloseable {
     private DataOutputStream out;
     private DataInputStream in;
 
-    public boolean isClosed() {
-        return isClosed;
-    }
-
     public Connection(Socket socket) throws IOException {
         this.socket = socket;
         out = new DataOutputStream(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
         isClosed = false;
+    }
+
+    public boolean isClosed() {
+        return isClosed;
     }
 
     public synchronized void close() {
