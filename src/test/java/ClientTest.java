@@ -1,5 +1,3 @@
-import jdk.Exported;
-import org.junit.Test;
 import junit.framework.TestCase;
 
 import java.io.*;
