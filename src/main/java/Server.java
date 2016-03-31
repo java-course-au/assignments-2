@@ -23,18 +23,7 @@ public class Server implements AutoCloseable {
     }
 
     public Server(int portNumber) {
-        try {
-            serverSocket = new ServerSocket(portNumber);
-        } catch (IOException e) {
-            return;
-        }
-        (new Thread(() -> {
-            try {
-                connectionCatcher();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        })).start();
+        start(portNumber);
     }
 
     public void connectionCatcher() {
@@ -71,6 +60,21 @@ public class Server implements AutoCloseable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void start(int portNumber) {
+        try {
+            serverSocket = new ServerSocket(portNumber);
+        } catch (IOException e) {
+            return;
+        }
+        (new Thread(() -> {
+            try {
+                connectionCatcher();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        })).start();
     }
 
     private void getFileContent(Connection curConnection) throws IOException {
