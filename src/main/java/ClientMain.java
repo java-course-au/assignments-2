@@ -6,65 +6,76 @@ import java.util.ArrayList;
  * Created by n_buga on 13.03.16.
  */
 public abstract class ClientMain {
-    public static void out1() {
+
+    public static void main(String[] args) throws IOException {
+        if (args.length < 2) {
+            System.out.println("Not enough arguments");
+            outCommandLine();
+            return;
+        }
+        String host = args[0];
+        String stringPort = args[1];
+        Integer port = tryParseOrNull(stringPort);
+        if (port == null) {
+            System.out.println("Wrong port format");
+            outCommandLine();
+            return;
+        }
+        Client client = new Client(host, port);
+        Scanner in = new Scanner(System.in);
+        outCommandFormat();
+        while (true) {
+            String type = in.next();
+            if (type.equals("exit")) {
+                break;
+            }
+            if (type.equals("get")) {
+                String path = in.next();
+                Client.GetResponseContent result = client.get(path);
+                System.out.println(result.getSize());
+                while (result.hasNextByte()) {
+                    try {
+                        System.out.print(result.readNextByte());
+                    } catch (Exception e) {
+                        break;
+                    }
+                }
+                break;
+            } else if (type.equals("list")) {
+                String path = in.next();
+                ArrayList<FTPfile> files = client.list(path);
+                for (FTPfile file : files) {
+                    System.out.print(file.getName());
+                    System.out.print(" ");
+                    System.out.println(file.isDirectory());
+                }
+                break;
+            } else {
+                System.out.println("Wrong command format");
+                break;
+            }
+        }
+    }
+
+    private static void outCommandLine() {
         System.out.println("Use following format:");
         System.out.println("<host> <port>");
     }
-    public static void out2() {
+
+    private static void outCommandFormat() {
         System.out.println("Use following formats:");
         System.out.println("get <path>");
         System.out.println("get <path> <output_file>");
         System.out.println("list <path>");
     }
-    public static void main(String[] args) throws IOException {
-        if (args.length < 2) {
-            System.out.println("Not enough arguments");
-            out1();
-        } else {
-            String host = args[0];
-            String stringPort = args[1];
-            int port;
-            try {
-                port = Integer.parseInt(stringPort);
-            } catch (NumberFormatException e) {
-                System.out.println("Wrong port format");
-                out1();
-                return;
-            }
-            Client client = new Client(host, port);
-            Scanner in = new Scanner(System.in);
-            out2();
-            while (true) {
-                String type = in.next();
-                if (type.equals("exit")) {
-                    break;
-                }
-                if (type.equals("get")) {
-                    String path = in.next();
-                    Client.GetAnswerType result = client.get(path);
-                    System.out.println(result.getSize());
-                    while (result.hasNextByte()) {
-                        try {
-                            System.out.print(result.readNextByte());
-                        } catch (Exception e) {
-                            break;
-                        }
-                    }
-                    break;
-                } else if (type.equals("list")) {
-                    String path = in.next();
-                    ArrayList<FTPfile> files = client.list(path);
-                    for (FTPfile file : files) {
-                        System.out.print(file.getName());
-                        System.out.print(" ");
-                        System.out.println(file.isDirectory());
-                    }
-                    break;
-                } else {
-                    System.out.println("Wrong command format");
-                    break;
-                }
-            }
+
+    private static Integer tryParseOrNull(String string) {
+        Integer result;
+        try {
+            result = Integer.parseInt(string);
+        } catch (NumberFormatException e) {
+            return null;
         }
+        return result;
     }
 }

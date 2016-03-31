@@ -6,30 +6,39 @@ import java.util.ArrayList;
  * Created by n_buga on 13.03.16.
  */
 public class Client  {
+    public static final int CLOSE_QUERY = 0;
+    public static final int GET_QUERY = 1;
+    public static final int LIST_QUERY = 2;
+
     private String hostName;
     private int portNumber;
 
-    public static class GetAnswerType {
-        private InputStream inputStream;
+    public static class GetResponseContent {
         private final int STORAGE_SIZE = 1024;
+
+        private InputStream inputStream;
         private byte[] storage = new byte[STORAGE_SIZE];
         private int size;
         private int curPosition = 0;
         private int positionInStorage = STORAGE_SIZE;
 
-        public GetAnswerType(InputStream inputStream, int size) {
+        public GetResponseContent(InputStream inputStream, int size) {
             this.inputStream = inputStream;
             this.size = size;
         }
+
         public InputStream getInputStream() {
             return inputStream;
         }
+
         public int getSize() {
             return size;
         }
+
         public boolean hasNextByte() {
             return curPosition < size;
         }
+
         public char readNextByte() throws Exception {
             if (curPosition >= size) {
                 throw new Exception();
@@ -51,10 +60,10 @@ public class Client  {
         this.portNumber = portNumber;
     }
 
-    public GetAnswerType get(String path) throws IOException {
+    public GetResponseContent get(String path) throws IOException {
         Socket clientSocket = new Socket(hostName, portNumber);
         Connection curConnection = new Connection(clientSocket);
-        curConnection.ask(1, path);
+        curConnection.ask(GET_QUERY, path);
         return curConnection.readGet();
     }
 
@@ -63,7 +72,7 @@ public class Client  {
         try (
                 Socket clientSocket = new Socket(hostName, portNumber);
                 Connection curConnection = new Connection(clientSocket)) {
-            curConnection.ask(2, path);
+            curConnection.ask(LIST_QUERY, path);
             result = curConnection.readList();
         }
         return result;

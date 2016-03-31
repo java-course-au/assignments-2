@@ -28,8 +28,12 @@ public class Connection implements AutoCloseable {
         }
         try {
             socket.close();
-            if (out != null) out.close();
-            if (in != null) in.close();
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
         } catch (IOException ignored) { }
         isClosed = true;
     }
@@ -40,11 +44,12 @@ public class Connection implements AutoCloseable {
             while (in != null && in.available() > 0) {
                 try {
                     Thread.sleep(delay);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException err) {
+                    System.out.println("Unexpected interrupt while waiting closing connection");
+                    break;
                 }
             }
-        } catch (IOException ignored) {
-        }
+        } catch (IOException ignored) { }
         close();
     }
 
@@ -80,9 +85,9 @@ public class Connection implements AutoCloseable {
         }
     }
 
-    public Client.GetAnswerType readGet() throws IOException {
+    public Client.GetResponseContent readGet() throws IOException {
         int size = in.readInt();
-        Client.GetAnswerType result = new Client.GetAnswerType(in, size);
+        Client.GetResponseContent result = new Client.GetResponseContent(in, size);
         (new Thread(this::waitUntilClosed)).start();
         return result;
     }

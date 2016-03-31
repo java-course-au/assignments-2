@@ -29,9 +29,9 @@ public class ClientTest extends TestCase {
                 return;
             }
 
-            Client.GetAnswerType result = testClient.get(pathIn.toString());
-            assert (result.getSize() == 0);
-            assert (pathIn.length() == 0);
+            Client.GetResponseContent result = testClient.get(pathIn.toString());
+            assertTrue(result.getSize() == 0);
+            assertTrue(pathIn.length() == 0);
 
             result.getInputStream().close();
 
@@ -44,7 +44,7 @@ public class ClientTest extends TestCase {
                 while (result.hasNextByte()) {
                     os.writeByte(result.readNextByte());
                 }
-                assert (FileUtils.contentEquals(pathIn, pathOut));
+                assertTrue(FileUtils.contentEquals(pathIn, pathOut));
             }
             pathIn.delete();
             pathOut.delete();
@@ -61,7 +61,7 @@ public class ClientTest extends TestCase {
 
             Path path = Files.createTempDirectory("");
             ArrayList<FTPfile> list = testClient.list(path.toString());
-            assert (list.size() == 0);
+            assertTrue(list.size() == 0);
 
             ArrayList<Path> innerDirs = new ArrayList<>();
 
@@ -70,9 +70,9 @@ public class ClientTest extends TestCase {
             }
 
             list = testClient.list(path.toString());
-            assert (list.size() == countOfFiles);
+            assertTrue(list.size() == countOfFiles);
             for (FTPfile ftpfile : list) {
-                assert (ftpfile.isDirectory());
+                assertTrue(ftpfile.isDirectory());
             }
 
             for (int j = 0; j < countOfFiles; j++) {
@@ -81,9 +81,9 @@ public class ClientTest extends TestCase {
             }
 
             list = testClient.list(path.toString());
-            assert (list.size() == countOfFiles);
+            assertTrue(list.size() == countOfFiles);
             for (FTPfile ftpfile : list) {
-                assert !ftpfile.isDirectory();
+                assertTrue(!ftpfile.isDirectory());
             }
 
             for (int j = 0; j < countOfFiles; j++) {

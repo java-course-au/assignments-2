@@ -9,6 +9,9 @@ import java.util.ArrayList;
  * Created by n_buga on 13.03.16.
  */
 public class Server implements AutoCloseable {
+    private final int CLOSE_QUERY = 0;
+    private final int GET_QUERY = 1;
+    private final int LIST_QUERY = 2;
     private ServerSocket serverSocket;
 
     public void close() {
@@ -27,33 +30,18 @@ public class Server implements AutoCloseable {
         }
         (new Thread(() -> {
             try {
-                connectionHandler();
+                connectionCatcher();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         })).start();
     }
 
-    public void connectionHandler() {
+    public void connectionCatcher() {
         try {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                Connection curConnection = new Connection(clientSocket);
-                while (!curConnection.isClosed()) {
-                    int askType = curConnection.readAskType();
-                    if (askType == 0) {
-                        curConnection.close();
-                        break;
-                    }
-                    if (askType == 1) {
-                        getHandler(curConnection);
-                    } else if (askType == 2) {
-                        listHandler(curConnection);
-                    } else {
-                        throw new Exception("Wrong format");
-                    }
-                }
-                curConnection.close();
+                (new Thread(() -> connectionHandler(clientSocket))).start();
             }
         } catch (IOException e) {
             close();
@@ -62,7 +50,30 @@ public class Server implements AutoCloseable {
         }
     }
 
-    private void getHandler(Connection curConnection) throws IOException {
+    public void connectionHandler(Socket clientSocket) {
+        try (Connection curConnection = new Connection(clientSocket)) {
+            while (!curConnection.isClosed()) {
+                int requestType = curConnection.readAskType();
+                if (requestType == Client.CLOSE_QUERY) {
+                    curConnection.close();
+                    break;
+                }
+                if (requestType == Client.GET_QUERY) {
+                    getFileContent(curConnection);
+                } else if (requestType == Client.LIST_QUERY) {
+                    getListOfFiles(curConnection);
+                } else {
+                    throw new Exception("Wrong format");
+                }
+            }
+        } catch (IOException e) {
+            close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getFileContent(Connection curConnection) throws IOException {
         String filePath = curConnection.readPath();
         File file = new File(filePath);
         int size;
@@ -76,7 +87,7 @@ public class Server implements AutoCloseable {
         curConnection.writeGet(size, is);
     }
 
-    private void listHandler(Connection curConnection) throws IOException {
+    private void getListOfFiles(Connection curConnection) throws IOException {
         String path = curConnection.readPath();
         File filePath = new File(path);
         File[] files = filePath.listFiles();
