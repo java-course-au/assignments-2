@@ -1,3 +1,5 @@
+import org.apache.commons.io.input.BoundedInputStream;
+
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
@@ -31,11 +33,11 @@ public abstract class ClientMain {
             }
             if (type.equals("get")) {
                 String path = in.next();
-                Client.GetResponseContent result = client.get(path);
-                System.out.println(result.getSize());
-                while (result.hasNextByte()) {
+                BoundedInputStream result = client.get(path);
+                System.out.println(result.available());
+                while (result.available() > 0) {
                     try {
-                        System.out.print(result.readNextByte());
+                        System.out.print(result.read());
                     } catch (Exception e) {
                         break;
                     }

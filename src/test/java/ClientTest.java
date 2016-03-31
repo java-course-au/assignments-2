@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.BoundedInputStream;
 
 /**
  * Created by n_buga on 14.03.16.
@@ -17,7 +18,7 @@ public class ClientTest extends TestCase {
     private static final String TEST_STRING = "Hello!";
 
     public void testGet() throws Exception {
-        try (Server testServer = new Server(PORT);) {
+        try (Server testServer = new Server(PORT)) {
             Client testClient = new Client(HOST, PORT);
             File pathOut;
             File pathIn;
@@ -29,11 +30,11 @@ public class ClientTest extends TestCase {
                 return;
             }
 
-            Client.GetResponseContent result = testClient.get(pathIn.toString());
-            assertTrue(result.getSize() == 0);
+            BoundedInputStream result = testClient.get(pathIn.toString());
+            assertTrue(result.available() == 0);
             assertTrue(pathIn.length() == 0);
 
-            result.getInputStream().close();
+            result.close();
 
             try (DataOutputStream os = new DataOutputStream(new FileOutputStream(pathIn))) {
                 os.writeUTF(TEST_STRING);
@@ -41,8 +42,8 @@ public class ClientTest extends TestCase {
 
             try (DataOutputStream os = new DataOutputStream(new FileOutputStream(pathOut))) {
                 result = testClient.get(pathIn.toString());
-                while (result.hasNextByte()) {
-                    os.writeByte(result.readNextByte());
+                while (result.available() > 0) {
+                    os.writeByte(result.read());
                 }
                 assertTrue(FileUtils.contentEquals(pathIn, pathOut));
             }

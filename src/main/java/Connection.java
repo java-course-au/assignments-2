@@ -1,4 +1,10 @@
-import java.io.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BoundedInputStream;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -74,20 +80,15 @@ public class Connection implements AutoCloseable {
     }
 
     public void writeGet(int size, InputStream file) throws IOException {
-        final int packetSize = 1024;
         out.writeInt(size);
         out.flush();
-        byte[] buf = new byte[packetSize];
-        int len;
-        while ((len = file.read(buf)) > 0) {
-            out.write(buf, 0, len);
-            out.flush();
-        }
+        IOUtils.copyLarge(file, out);
+        out.flush();
     }
 
-    public Client.GetResponseContent readGet() throws IOException {
+    public BoundedInputStream readGet() throws IOException {
         int size = in.readInt();
-        Client.GetResponseContent result = new Client.GetResponseContent(in, size);
+        BoundedInputStream result = new BoundedInputStream(in, size);
         (new Thread(this::waitUntilClosed)).start();
         return result;
     }
