@@ -48,7 +48,8 @@ public abstract class FTPClientMain {
         int request = REQUESTS.get(actionString);
 
         try (FTPClient client = new FTPClient(host, port)) {
-            String path, outputFile;
+            String path;
+            String outputFile;
             switch (request) {
                 case FTPConnection.FTP_REQUEST_LIST:
                     if (args.length < ARG_PATH + 1) {
