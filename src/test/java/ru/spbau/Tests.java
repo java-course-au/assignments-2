@@ -19,7 +19,6 @@ import static org.junit.Assert.fail;
  */
 
 public class Tests {
-    public static final int PORT1 = 5000;
     public static final int PORT2 = 5001;
     public static final int PORT3 = 5002;
 
@@ -29,24 +28,6 @@ public class Tests {
     public static final String FILE_PATH = "src/test/resources/test/1.png";
 
     public static final int CLIENTS_COUNT = 5;
-
-    @Test
-    public void testGetListSingleThread() throws IOException, InterruptedException {
-        FtpServer server = new FtpServer(PORT1);
-        FtpClient client = new FtpClient(HOSTNAME, PORT1);
-
-        server.start();
-        client.start();
-
-        List<String> list = client.getList(DIR_PATH);
-        Assert.assertNotNull(list);
-        Assert.assertEquals(list.size(), 1);
-        Assert.assertEquals(list.get(0), "1.png false");
-
-        client.stop();
-        server.stop();
-    }
-
 
     @Test
     public void testGetFileSingleThread() throws IOException, InterruptedException {
