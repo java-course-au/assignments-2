@@ -12,11 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.apache.commons.io.IOUtils;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by rebryk on 10/03/16.
  */
+
 public class Tests {
+    public static final int PORT1 = 5000;
     public static final int PORT2 = 5001;
     public static final int PORT3 = 5002;
 
@@ -27,9 +30,8 @@ public class Tests {
 
     public static final int CLIENTS_COUNT = 5;
 
-    /*
     @Test
-    public void testGetListSingleThread() throws IOException {
+    public void testGetListSingleThread() throws IOException, InterruptedException {
         FtpServer server = new FtpServer(PORT1);
         FtpClient client = new FtpClient(HOSTNAME, PORT1);
 
@@ -38,14 +40,16 @@ public class Tests {
 
         List<String> list = client.getList(DIR_PATH);
         Assert.assertNotNull(list);
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0), "1.png false");
 
-        server.stop();
         client.stop();
-    }*/
+        server.stop();
+    }
 
 
     @Test
-    public void testGetFileSingleThread() throws IOException {
+    public void testGetFileSingleThread() throws IOException, InterruptedException {
         FtpServer server = new FtpServer(PORT2);
         FtpClient client = new FtpClient(HOSTNAME, PORT2);
 
@@ -62,8 +66,9 @@ public class Tests {
         client.stop();
     }
 
+
     @Test
-    public void testGetListMultiThread() {
+    public void testGetListMultiThread() throws IOException, InterruptedException {
         FtpServer server = new FtpServer(PORT3);
 
         server.start();
@@ -71,28 +76,26 @@ public class Tests {
         List<Thread> clients = new ArrayList<>();
         for (int i = 0; i < CLIENTS_COUNT; ++i) {
             clients.add(new Thread(() -> {
+                try {
                     FtpClient client = new FtpClient(HOSTNAME, PORT3);
                     client.start();
 
-                    List<String> list = null;
-                    try {
-                        list = client.getList(DIR_PATH);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    List<String> list = client.getList(DIR_PATH);
                     Assert.assertNotNull(list);
+                    Assert.assertEquals(list.size(), 1);
+                    Assert.assertEquals(list.get(0), "1.png false");
+
                     client.stop();
-                }));
+                } catch (IOException e) {
+                    fail();
+                }
+            }));
         }
 
         clients.forEach(Thread::start);
 
-        try {
-            for (Thread thread: clients) {
-                thread.join();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (Thread thread: clients) {
+            thread.join();
         }
 
         server.stop();

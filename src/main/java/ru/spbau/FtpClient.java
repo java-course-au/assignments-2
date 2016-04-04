@@ -27,42 +27,27 @@ public class FtpClient {
         this.port = port;
     }
 
-    public void start() {
-        try {
-            socket = new Socket(hostname, port);
-            inStream = new DataInputStream(socket.getInputStream());
-            outStream = new DataOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void start() throws IOException {
+        socket = new Socket(hostname, port);
+        inStream = new DataInputStream(socket.getInputStream());
+        outStream = new DataOutputStream(socket.getOutputStream());
     }
 
-    public void stop() {
-        try {
-            inStream.close();
-            outStream.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void stop() throws IOException {
+        inStream.close();
+        outStream.close();
+        socket.close();
     }
 
     public List<String> getList(final String path) throws IOException {
-        List<String> list = null;
-
         outStream.writeInt(QUERY_GET_LIST);
         outStream.writeUTF(path);
         outStream.flush();
 
-        String status = inStream.readUTF();
-        if (status.equals("Ok")) {
-            list = new ArrayList<>();
-            int filesCount = inStream.readInt();
-            for (int i = 0; i < filesCount; ++i) {
-                list.add(inStream.readUTF() + " " + inStream.readUTF());
-            }
-        } else {
-            System.out.println(status);
+        List<String> list = new ArrayList<>();
+        int filesCount = inStream.readInt();
+        for (int i = 0; i < filesCount; ++i) {
+            list.add(inStream.readUTF() + " " + inStream.readUTF());
         }
 
         return list;
@@ -70,21 +55,14 @@ public class FtpClient {
 
     public InputStream getFile(final String path) throws IOException {
         if (outStream == null) {
-            System.out.println("outStream = null");
             return null;
         }
+
         outStream.writeInt(QUERY_GET_FILE);
         outStream.writeUTF(path);
         outStream.flush();
 
-        String status = inStream.readUTF();
-        if (status.equals("Ok")) {
-            long size = inStream.readLong();
-            return new BoundedInputStream(inStream, size);
-        } else {
-            System.out.println(status);
-        }
-
-        return null;
+        long size = inStream.readLong();
+        return new BoundedInputStream(inStream, size);
     }
 }
