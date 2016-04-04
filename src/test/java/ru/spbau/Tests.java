@@ -19,8 +19,7 @@ import static org.junit.Assert.fail;
  */
 
 public class Tests {
-    public static final int PORT2 = 5001;
-    public static final int PORT3 = 5002;
+    public static final int PORT = 5001;
 
     public static final String HOSTNAME = "localhost";
 
@@ -30,9 +29,9 @@ public class Tests {
     public static final int CLIENTS_COUNT = 5;
 
     @Test
-    public void testGetFileSingleThread() throws IOException, InterruptedException {
-        FtpServer server = new FtpServer(PORT2);
-        FtpClient client = new FtpClient(HOSTNAME, PORT2);
+    public void testFtpServer() throws IOException, InterruptedException {
+        FtpServer server = new FtpServer(PORT);
+        FtpClient client = new FtpClient(HOSTNAME, PORT);
 
         server.start();
         client.start();
@@ -43,36 +42,32 @@ public class Tests {
         Assert.assertNotNull(data);
         assertArrayEquals(IOUtils.toByteArray(file), IOUtils.toByteArray(data));
 
-        server.stop();
-        client.stop();
-    }
 
-
-    @Test
-    public void testGetListMultiThread() throws IOException, InterruptedException {
-        FtpServer server = new FtpServer(PORT3);
-
-        server.start();
+        List<String> list = client.getList(DIR_PATH);
+        Assert.assertNotNull(list);
+        Assert.assertEquals(list.size(), 1);
+        Assert.assertEquals(list.get(0), "1.png false");
 
         List<Thread> clients = new ArrayList<>();
         for (int i = 0; i < CLIENTS_COUNT; ++i) {
             clients.add(new Thread(() -> {
                 try {
-                    FtpClient client = new FtpClient(HOSTNAME, PORT3);
-                    client.start();
+                    FtpClient newClient = new FtpClient(HOSTNAME, PORT);
+                    newClient.start();
 
-                    List<String> list = client.getList(DIR_PATH);
-                    Assert.assertNotNull(list);
-                    Assert.assertEquals(list.size(), 1);
-                    Assert.assertEquals(list.get(0), "1.png false");
+                    List<String> newList = newClient.getList(DIR_PATH);
+                    Assert.assertNotNull(newList);
+                    Assert.assertEquals(newList.size(), 1);
+                    Assert.assertEquals(newList.get(0), "1.png false");
 
-                    client.stop();
+                    newClient.stop();
                 } catch (IOException e) {
                     fail();
                 }
             }));
         }
 
+        client.stop();
         clients.forEach(Thread::start);
 
         for (Thread thread: clients) {
