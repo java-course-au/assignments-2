@@ -1,7 +1,42 @@
 package ru.spbau.mit;
 
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+
 import static org.junit.Assert.*;
 
 public class DirCheckSumTest {
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
+    private static int TEST_FILES_NUM = 4;
+
+//    @Before
+    public void fillTempDir() throws IOException {
+        for (int i = 0; i < TEST_FILES_NUM; i++) {
+            File file;
+            try {
+                file = folder.newFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            byte[] a = {0};
+            Files.write(file.toPath(), a);
+        }
+    }
+
+    @Test
+    public void testCheckSumOneThread() throws IOException, NoSuchAlgorithmException {
+        fillTempDir();
+        DirCheckSum.checkSumOneThread(folder.getRoot().toPath());
+    }
 }
