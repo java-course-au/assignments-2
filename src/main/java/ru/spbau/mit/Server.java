@@ -36,12 +36,12 @@ public class Server {
         writingBuffer = new HashMap<>();
 
         while (true) {
+            selector.select();
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
             while (keyIterator.hasNext()) {
                 SelectionKey key = keyIterator.next();
                 if (key.isAcceptable()) {
-                    System.err.print("new client");
                     SocketChannel socketChannel = serverSocketChannel.accept();
 
                     if (socketChannel != null) {
