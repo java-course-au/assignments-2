@@ -15,14 +15,16 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class Server {
+public abstract class Server {
     private static final int PORT = 8080;
+    private static final int BUFFER_SIZE = 200000;
+
     public static void main(String[] args) throws IOException {
         byte[] data;
         Selector selector;
         ServerSocketChannel serverSocketChannel;
 
-        Map<SocketChannel, ByteBuffer> writingBuffer;
+        Map<SocketChannel, ByteBuffer> writingBuffer = new HashMap<>();
 
         Path path = Paths.get(args[0]);
         data = Files.readAllBytes(path);
@@ -33,7 +35,6 @@ public class Server {
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-        writingBuffer = new HashMap<>();
 
         while (true) {
             selector.select();
@@ -45,7 +46,7 @@ public class Server {
                     SocketChannel socketChannel = serverSocketChannel.accept();
 
                     if (socketChannel != null) {
-                        ByteBuffer buf = ByteBuffer.allocate(200000);
+                        ByteBuffer buf = ByteBuffer.allocate(BUFFER_SIZE);
                         buf.clear();
                         buf.put(data);
                         buf.flip();
