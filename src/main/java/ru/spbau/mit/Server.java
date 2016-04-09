@@ -45,7 +45,7 @@ public class Server {
                     SocketChannel socketChannel = serverSocketChannel.accept();
 
                     if (socketChannel != null) {
-                        ByteBuffer buf = ByteBuffer.allocate(48);
+                        ByteBuffer buf = ByteBuffer.allocate(200000);
                         buf.clear();
                         buf.put(data);
                         buf.flip();
