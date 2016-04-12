@@ -1,8 +1,13 @@
 package ru.spbau.mit;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 public final class Main {
+    private static final String MENU = "Menu";
+    private static final String CALCULATE = "Build";
+    private static final String CLEAR = "Clear";
+
     private Main() {
 
     }
@@ -23,9 +28,22 @@ public final class Main {
     }
 
     private static JMenuBar buildMenuBar(Canvas canvas) {
-        // Return JMenuBar with one JMenu called "Main"
-        // This JMenu should contain "Calculate" and "Clear" JMenuItems which call same methods in Canvas
+        JMenuItem calculateItem = new JMenuItem(CALCULATE);
+        calculateItem.addActionListener((ActionEvent actionEvent) -> {
+            canvas.calculate();
+        });
 
-        throw new UnsupportedOperationException();
+        JMenuItem clearItem = new JMenuItem(CLEAR);
+        clearItem.addActionListener((ActionEvent actionEvent) -> {
+            canvas.clear();
+        });
+
+        JMenu menu = new JMenu(MENU);
+        menu.add(calculateItem);
+        menu.add(clearItem);
+
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(menu);
+        return menuBar;
     }
 }
