@@ -26,6 +26,17 @@ public final class Main {
         // Return JMenuBar with one JMenu called "Main"
         // This JMenu should contain "Calculate" and "Clear" JMenuItems which call same methods in Canvas
 
-        throw new UnsupportedOperationException();
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Main");
+        menuBar.add(menu);
+
+        JMenuItem calculateItem = new JMenuItem("Calculate");
+        calculateItem.addActionListener((event) -> canvas.calculate());
+        menu.add(calculateItem);
+
+        JMenuItem clearItem = new JMenuItem("Clear");
+        clearItem.addActionListener((event) -> canvas.clear());
+        menu.add(clearItem);
+        return menuBar;
     }
 }
