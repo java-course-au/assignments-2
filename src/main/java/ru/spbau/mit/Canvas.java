@@ -2,7 +2,6 @@ package ru.spbau.mit;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -35,6 +34,8 @@ class Canvas extends JPanel implements DefaultMouseListener {
                 }
                 points.add(new Point(e.getPoint()));
                 repaint();
+                break;
+            default:
                 break;
         }
     }
