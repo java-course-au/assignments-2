@@ -1,8 +1,11 @@
 package ru.spbau.mit;
 
 import javax.swing.*;
+import java.util.logging.Logger;
 
 public final class Main {
+
+    private static final Logger logger = Logger.getLogger("Main");
     private Main() {
 
     }
@@ -26,6 +29,19 @@ public final class Main {
         // Return JMenuBar with one JMenu called "Main"
         // This JMenu should contain "Calculate" and "Clear" JMenuItems which call same methods in Canvas
 
-        throw new UnsupportedOperationException();
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Menu");
+        JMenuItem calculate = new JMenuItem("Calculate");
+        calculate.addActionListener(e -> canvas.calculate());
+        JMenuItem clear = new JMenuItem("Clear");
+        clear.addActionListener(e -> {
+            canvas.clear();
+            logger.info("Cleared");
+        });
+        menu.add(calculate);
+        menu.add(clear);
+        menuBar.add(menu);
+
+        return menuBar;
     }
 }
