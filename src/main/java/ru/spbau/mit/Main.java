@@ -5,7 +5,8 @@ import java.util.logging.Logger;
 
 public final class Main {
 
-    private static final Logger logger = Logger.getLogger("Main");
+    private static final Logger LOG = Logger.getLogger("Main");
+
     private Main() {
 
     }
@@ -36,7 +37,7 @@ public final class Main {
         JMenuItem clear = new JMenuItem("Clear");
         clear.addActionListener(e -> {
             canvas.clear();
-            logger.info("Cleared");
+            LOG.info("Cleared");
         });
         menu.add(calculate);
         menu.add(clear);

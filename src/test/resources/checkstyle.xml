@@ -172,7 +172,7 @@
         <module name="TodoComment"/>
         <module name="UpperEll"/>
 
-        <module name="VariableDeclarationUsageDistance"/>
+        <!--<module name="VariableDeclarationUsageDistance"/>-->
         <module name="OneStatementPerLine"/>
 
         <module name="NestedIfDepth">
