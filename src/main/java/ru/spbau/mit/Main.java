@@ -3,6 +3,10 @@ package ru.spbau.mit;
 import javax.swing.*;
 
 public final class Main {
+    private static final String MAIN_MENU = "Main";
+    private static final String CALCULATE_MENU_ITEM = "Calculate";
+    private static final String CLEAR_MENU_ITEM = "Clear";
+
     private Main() {
 
     }
@@ -22,10 +26,20 @@ public final class Main {
         frame.setVisible(true);
     }
 
-    private static JMenuBar buildMenuBar(Canvas canvas) {
-        // Return JMenuBar with one JMenu called "Main"
-        // This JMenu should contain "Calculate" and "Clear" JMenuItems which call same methods in Canvas
+    private static JMenu buildJMenu(Canvas canvas) {
+        JMenu jMenu = new JMenu(MAIN_MENU);
+        JMenuItem calculateMenuItem = new JMenuItem(CALCULATE_MENU_ITEM);
+        JMenuItem clearMenuItem = new JMenuItem(CLEAR_MENU_ITEM);
+        calculateMenuItem.addActionListener(e -> canvas.calculate());
+        clearMenuItem.addActionListener(e -> canvas.clear());
+        jMenu.add(calculateMenuItem);
+        jMenu.add(clearMenuItem);
+        return jMenu;
+    }
 
-        throw new UnsupportedOperationException();
+    private static JMenuBar buildMenuBar(Canvas canvas) {
+        JMenuBar jMenuBar = new JMenuBar();
+        jMenuBar.add(buildJMenu(canvas));
+        return jMenuBar;
     }
 }
