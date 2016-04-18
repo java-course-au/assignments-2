@@ -263,7 +263,7 @@ public class TorrentTests {
     }
 
     @Test
-    public void TestOnSaveServerData() throws InterruptedException, IOException {
+    public void testOnSaveServerData() throws InterruptedException, IOException {
         final int curID = 0;
         TorrentTracker torrent = new TorrentTracker();
         torrent.start();

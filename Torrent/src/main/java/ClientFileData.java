@@ -61,7 +61,7 @@ public class ClientFileData {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try (PrintWriter writer = new PrintWriter(pathToFile.toString(), "UTF-8")){
+        try (PrintWriter writer = new PrintWriter(pathToFile.toString(), "UTF-8")) {
             writer.printf("%d\n", idFileMap.size());
             for (int key: idFileMap.keySet()) {
                 writer.printf("%d\n", key);

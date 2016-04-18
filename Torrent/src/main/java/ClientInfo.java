@@ -27,8 +27,8 @@ public class ClientInfo {
     }
 
     static public ClientInfo readFromFile(Scanner scanner) {
-        byte[] ip = new byte[4];
-        for (int i = 0; i < 4; i++) {
+        byte[] ip = new byte[Connection.COUNT_IP_PARTS];
+        for (int i = 0; i < Connection.COUNT_IP_PARTS; i++) {
             ip[i] = scanner.nextByte();
         }
         int port = scanner.nextInt();
@@ -36,7 +36,7 @@ public class ClientInfo {
     }
 
     public boolean writeToFile(PrintWriter writer) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < Connection.COUNT_IP_PARTS; i++) {
             writer.print(serverIP[i]);
             writer.print(" ");
         }

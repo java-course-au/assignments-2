@@ -46,7 +46,8 @@ public class TorrentTracker implements AutoCloseable {
             for (int i = 0; i < countOfFiles; i++) {
                 int id = scanner.nextInt();
                 TrackerFileInfo curFileInfo = TrackerFileInfo.readFromFile(scanner);
-                idFileMap.put(id, new TrackerFileInfo(curFileInfo.getName(), curFileInfo.getSize(), curFileInfo.getID()));
+                idFileMap.put(id, new TrackerFileInfo(curFileInfo.getName(),
+                        curFileInfo.getSize(), curFileInfo.getID()));
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -62,7 +63,7 @@ public class TorrentTracker implements AutoCloseable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try (PrintWriter writer = new PrintWriter(pathToFile.toString())){
+        try (PrintWriter writer = new PrintWriter(pathToFile.toString())) {
             writer.printf("%d\n", idFileMap.size());
             for (Integer id: idFileMap.keySet()) {
                 writer.printf("%d\n", id);
@@ -241,7 +242,7 @@ public class TorrentTracker implements AutoCloseable {
                 idAvailableFiles.add(idFile);
             }
         } catch (NullPointerException e) {
-            System.out.println("Thi id we want to add:");
+            System.out.println("This id we doesn't exist:");
             System.out.println(idFile);
         }
     }
