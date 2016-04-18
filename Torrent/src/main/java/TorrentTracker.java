@@ -307,7 +307,7 @@ public class TorrentTracker implements AutoCloseable {
             scheduledExecutorService.scheduleAtFixedRate(new ConnectionTimerTask(curConnection),
                     TIME_OUT_SCHEDULE, TIME_OUT_SCHEDULE, TimeUnit.SECONDS);
             int k = 0;
-            while (!curConnection.isClosed()) {
+            while (!end && !curConnection.isClosed()) {
                 int type = curConnection.readQueryType();
                 switch (type) {
                     case Connection.LIST_QUERY:
