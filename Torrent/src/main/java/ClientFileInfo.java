@@ -24,7 +24,7 @@ public class ClientFileInfo {
     }
 
     public void addAllParts() {
-        for (int i = 1; i <=  ((size - 1) / SIZE_OF_FILE_PIECE + 1); i++) {
+        for (int i = 0; i < ((size - 1) / SIZE_OF_FILE_PIECE + 1); i++) {
             partsOfFile.add(i);
         }
     }

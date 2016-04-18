@@ -257,7 +257,7 @@ public class Client implements AutoCloseable{
                         int count = curConnection.readInt();
                         for (int j = 0; j < count; j++) {
                             int part = curConnection.readInt();
-                            if (part > countOfParts) {
+                            if (part >= countOfParts) {
                                 continue;
                             }
                             if (loadParts[part].equals(false)) {
@@ -286,7 +286,7 @@ public class Client implements AutoCloseable{
             try {
                 byte[] partText = curConnection.readPart();
                 randomAccessFile.write(partText,
-                                (part - 1) * ClientFileInfo.SIZE_OF_FILE_PIECE, partText.length);
+                                part * ClientFileInfo.SIZE_OF_FILE_PIECE, partText.length);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -298,7 +298,7 @@ public class Client implements AutoCloseable{
         private boolean end = false;
         private ServerSocket serverSocket;
         private final int TIME_OUT = 500;
-
+        private Thread serverThread;
         private int port;
 
         TorrentServer() {}
@@ -307,8 +307,16 @@ public class Client implements AutoCloseable{
             return port;
         }
 
-        public void start() {
-            (new Thread(this::connectionHandler)).start();
+        public Thread start() {
+            try {
+                serverSocket = new ServerSocket(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            this.port = serverSocket.getLocalPort();
+            serverThread = new Thread(this::connectionHandler);
+            serverThread.start();
+            return serverThread;
         }
 
         public void close() {
@@ -322,13 +330,6 @@ public class Client implements AutoCloseable{
 
         private void connectionHandler() {
             try {
-                serverSocket = new ServerSocket(0);
-                port = serverSocket.getLocalPort();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                this.port = serverSocket.getLocalPort();
                 while (!end) {
                     serverSocket.setSoTimeout(TIME_OUT);
                     try {
@@ -372,14 +373,14 @@ public class Client implements AutoCloseable{
                 return;
             }
             int sizeOfPiece;
-            if (part != curInfo.getCountOfPieces()) {
+            if (part != curInfo.getCountOfPieces() - 1) {
                 sizeOfPiece = ClientFileInfo.SIZE_OF_FILE_PIECE;
             } else {
                 sizeOfPiece = (int) curInfo.getSize() % ClientFileInfo.SIZE_OF_FILE_PIECE;
             }
             try {
                 curConnection.sendPart(clientFileData.getIdFileMap().get(id).getFile(),
-                        (part - 1) * ClientFileInfo.SIZE_OF_FILE_PIECE, sizeOfPiece);
+                        part * ClientFileInfo.SIZE_OF_FILE_PIECE, sizeOfPiece);
             } catch (IOException e) {
                 e.printStackTrace();
                 curConnection.close();
