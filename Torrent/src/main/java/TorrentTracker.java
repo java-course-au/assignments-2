@@ -5,103 +5,181 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class TorrentTracker implements AutoCloseable {
-    static private final int TIME_OUT =  10000;
+    static public final int TIME_OUT_SCHEDULE =  20;
 
-    private ArrayList<FileInfo> availableFiles;
-    private Map<Integer, FileInfo> idFileMap;
+    private Set<TrackerFileInfo> availableFiles;
+    private Map<Integer, TrackerFileInfo> idFileMap;
     private int maxID = 0;
     private boolean end = false;
+    private Thread serverThread;
+    private final int TORRENT_PORT = 8081;
+    private final int TIME_OUT_ACCEPT = 500;
 
     public TorrentTracker() {
-        availableFiles = new ArrayList<FileInfo>();
-        idFileMap = new HashMap<Integer, FileInfo>();
+        availableFiles = new HashSet<>();
+        idFileMap = new HashMap<>();
     }
 
-    public void close() {}
+    public void close() {
+        end = true;
+        try {
+            serverThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void start() {
-        (new Thread(this::connectionHandler)).start();
+        serverThread = new Thread(this::connectionHandler);
+        serverThread.start();
     }
 
     public void getListOfAvailableFiles(Connection connection) {
-        connection.sendListOfAvailableFiles(availableFiles.size(), availableFiles);
+        try {
+            connection.sendListOfAvailableFiles(availableFiles.size(), availableFiles);
+        } catch (IOException e) {
+            e.printStackTrace();
+            connection.close();
+        }
     }
 
     public void upload(Connection connection) {
-        if (connection.getClient() == null) {
-            connection.sendInt(-1);
+        if (connection.getClientInfo() == null) {
+            try {
+                connection.sendInt(-1);
+            } catch (IOException e) {
+                System.out.println("ClientInfo = null");
+                e.printStackTrace();
+                connection.close();
+            }
         }
         String name = connection.readString();
-        int size = connection.readInt();
+        long size = connection.readLong();
 
         if (name == null || size == -1) {
-            connection.sendInt(-1);
+            try {
+                connection.sendInt(-1);
+            } catch (IOException e) {
+                e.printStackTrace();
+                connection.close();
+            }
             return;
         }
-        idFileMap.put(maxID, new FileInfo(name, size, maxID));
-        idFileMap.get(maxID).addClient(connection.getClient());
+        idFileMap.put(maxID, new TrackerFileInfo(name, size, maxID));
+        idFileMap.get(maxID).addClient(connection.getClientInfo());
         availableFiles.add(idFileMap.get(maxID));
-        connection.sendInt(maxID++);
+        try {
+            connection.sendInt(maxID++);
+        } catch (IOException e) {
+            e.printStackTrace();
+            connection.close();
+        }
     }
 
     public void getSources(Connection connection) {
         int fileID = connection.readInt();
         if (fileID == -1) {
-            connection.sendSources(new HashSet<>());
+            try {
+                connection.sendSources(new HashSet<>());
+            } catch (IOException e) {
+                e.printStackTrace();
+                connection.close();
+            }
             return;
         }
         if (!idFileMap.containsKey(fileID)) {
-            connection.sendSources(new HashSet<>());
+            try {
+                connection.sendSources(new HashSet<>());
+            } catch (IOException e) {
+                e.printStackTrace();
+                connection.close();
+            }
             return;
         }
-        FileInfo fileInfo = idFileMap.get(fileID);
-        connection.sendSources(fileInfo.getClients());
+        TrackerFileInfo trackerFileInfo = idFileMap.get(fileID);
+        try {
+            connection.sendSources(trackerFileInfo.getClientInfos());
+        } catch (IOException e) {
+            e.printStackTrace();
+            connection.close();
+        }
     }
 
     public void update(Connection connection) {
         connection.update();
-        if (connection.getClient() == null) {
-            short port = connection.readShort();
+
+        int port = connection.readInt();
+        byte[] ip = getBytes(connection.getSocket().getRemoteSocketAddress().toString());
+
+        if (connection.getClientInfo() == null) {
             if (port == -1) {
-                connection.sendBoolean(false);
+                System.out.println("Can't read port");
+                try {
+                    connection.sendBoolean(false);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    connection.close();
+                }
                 return;
             }
-            byte[] ip = getBytes(connection.getSocket().getRemoteSocketAddress().toString());
-            Client curClient = new Client(ip, port);
-            connection.setClient(curClient);
+            ClientInfo curClientInfo = new ClientInfo(ip, port);
+            connection.setClientInfo(curClientInfo);
         }
 
         int countFiles = connection.readInt();
         if (countFiles == -1) {
-            connection.sendBoolean(false);
+            System.out.print("can't read count of files");
+            try {
+                connection.sendBoolean(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+                connection.close();
+            }
+            return;
         }
 
-        ArrayList<Integer> ids = connection.readIDs(countFiles);
+        Set<Integer> ids = connection.readSet(countFiles);
         for (int id: ids) {
-            addClient(connection.getClient(), id);
+            addClient(connection.getClientInfo(), id);
+        }
+        try {
+            connection.sendBoolean(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            connection.close();
         }
     }
 
-    private void addClient(Client curClient, int idFile) {
-        FileInfo currentFileInfo = idFileMap.get(idFile);
-        for (Client client: currentFileInfo.getClients()) {
-            if (client.equals(curClient)) {
+    public byte[] getBytes(String ip) {
+        byte[] result = new byte[Connection.COUNT_IP_PARTS];
+        String ipPart = ip.split(":")[0];
+        String ipWhole = ipPart.split("/")[1];
+        String[] parts = ipWhole.split("\\.");
+
+        for (int i = 0; i < Connection.COUNT_IP_PARTS; i++) {
+            result[i] = (byte) ((int) parseIntOrNull(parts[i]));
+        }
+        return result;
+    }
+
+    private void addClient(ClientInfo curClientInfo, int idFile) {
+        TrackerFileInfo currentTrackerFileInfo = idFileMap.get(idFile);
+        for (ClientInfo clientInfo : currentTrackerFileInfo.getClientInfos()) {
+            if (clientInfo.myEquals(curClientInfo)) {
                 return;
             }
         }
-        currentFileInfo.addClient(curClient);
-    }
-
-    private byte[] getBytes(String ip) {
-        byte[] result = new byte[4];
-        String[] parts = ip.split(".");
-        for (int i = 0; i < 4; i++) {
-            result[i] = (byte) ((int)parseIntOrNull(parts[i]));
-        }
-        return result;
+        currentTrackerFileInfo.addClient(curClientInfo);
     }
 
     private Integer parseIntOrNull(String a) {
@@ -113,17 +191,21 @@ public class TorrentTracker implements AutoCloseable {
     }
 
     private void connectionHandler() {
-        try (ServerSocket serverSocket = new ServerSocket(8081)) {
+        try (ServerSocket serverSocket = new ServerSocket(TORRENT_PORT)) {
+            serverSocket.setSoTimeout(TIME_OUT_ACCEPT);
             while (!end) {
-                Socket clientSocket = serverSocket.accept();
-                (new Thread(() -> queryHandler(clientSocket))).start();
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    (new Thread(() -> queryHandler(clientSocket))).start();
+                } catch (SocketTimeoutException ignored) {
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private class ConnectionTimerTask extends TimerTask {
+    private class ConnectionTimerTask implements Runnable {
         private Connection connection;
 
         ConnectionTimerTask(Connection curConnection) {
@@ -133,42 +215,60 @@ public class TorrentTracker implements AutoCloseable {
         @Override
         public void run() {
             if (!connection.isUpdated()) {
+                System.out.print("We close you");
                 connection.close();
             }
-            deleteClientFromFileInfo(connection);
             connection.resetIsUpdated();
         }
     }
 
     private void deleteClientFromFileInfo(Connection connection) {
-        Client curClient = connection.getClient();
-        for (FileInfo file: availableFiles) {
-            file.getClients().remove(curClient);
+        ClientInfo curClientInfo = connection.getClientInfo();
+        Set<TrackerFileInfo> filesForRemove = new HashSet<>();
+        for (TrackerFileInfo file: availableFiles) {
+            file.getClientInfos().remove(curClientInfo);
+            if (file.getClientInfos().size() == 0) {
+                filesForRemove.add(file);
+            }
+        }
+        for (TrackerFileInfo file: filesForRemove) {
+            availableFiles.remove(file);
         }
     }
 
     private void queryHandler(Socket socket) {
-        Connection curConnection = new Connection(socket);
-        Timer timer = new Timer();
-        TimerTask checkConnection = new ConnectionTimerTask(curConnection);
-        timer.schedule(checkConnection, TIME_OUT, TIME_OUT);
-        while (!curConnection.isClosed()) {
-            switch (curConnection.readQueryType()) {
-                case Connection.LIST_QUERY:
-                    getListOfAvailableFiles(curConnection);
-                    break;
-                case Connection.SOURCES_QUERY:
-                    getSources(curConnection);
-                    break;
-                case Connection.UPDATE_QUERY:
-                    update(curConnection);
-                    break;
-                case Connection.UPLOAD_QUERY:
-                    upload(curConnection);
-                    break;
+        try (Connection curConnection = new Connection(socket)) {
+            ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+            scheduledExecutorService.scheduleAtFixedRate(new ConnectionTimerTask(curConnection),
+                    TIME_OUT_SCHEDULE, TIME_OUT_SCHEDULE, TimeUnit.SECONDS);
+            int k = 0;
+            while (!curConnection.isClosed()) {
+                int type = curConnection.readQueryType();
+                switch (type) {
+                    case Connection.LIST_QUERY:
+                        getListOfAvailableFiles(curConnection);
+                        break;
+                    case Connection.SOURCES_QUERY:
+                        getSources(curConnection);
+                        break;
+                    case Connection.UPDATE_QUERY:
+                        update(curConnection);
+                        break;
+                    case Connection.UPLOAD_QUERY:
+                        upload(curConnection);
+                        break;
+                    case Connection.END_CONNECTION:
+                        curConnection.close();
+                        break;
+                    case Connection.EOF:
+                        continue;
+                    default:
+                        System.out.print("Undefined query ");
+                        System.out.println(type);
+                }
             }
+            scheduledExecutorService.shutdown();
+            deleteClientFromFileInfo(curConnection);
         }
-        checkConnection.cancel();
-        timer.cancel();
     }
 }

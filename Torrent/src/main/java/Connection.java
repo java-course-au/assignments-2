@@ -2,20 +2,28 @@
  * Created by n_buga on 31.03.16.
  */
 
-import java.io.*;
-import java.lang.reflect.Array;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.Socket;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Connection {
+public class Connection implements AutoCloseable {
+    static public final int END_CONNECTION = -2;
+    static public final int EOF = -1;
     static public final int LIST_QUERY = 1;
     static public final int UPLOAD_QUERY = 2;
     static public final int SOURCES_QUERY = 3;
     static public final int UPDATE_QUERY = 4;
+    static public final int STAT_QUERY = 1;
+    static public final int GET_QUERY = 2;
+    static public final int COUNT_IP_PARTS = 4;
 
     private boolean isClosed = false;
     private boolean isUpdated = false;
-    private Client client = null;
+    private ClientInfo clientInfo = null;
 
     private DataInputStream in;
     private DataOutputStream out;
@@ -31,12 +39,12 @@ public class Connection {
         }
     }
 
-    public void setClient(Client client) {
-        this.client = client;
+    public void setClientInfo(ClientInfo clientInfo) {
+        this.clientInfo = clientInfo;
     }
 
-    public Client getClient() {
-        return client;
+    public ClientInfo getClientInfo() {
+        return clientInfo;
     }
 
     public void update() {
@@ -71,20 +79,32 @@ public class Connection {
 
     public int readQueryType() {
         try {
-            return in.read();
+            return in.readInt();
         } catch (IOException e) {
-            e.printStackTrace();
+            return END_CONNECTION;
         }
-        return 0;
+    }
+
+    public Boolean readBoolean() throws IOException {
+        return in.readBoolean();
     }
 
     public int readInt() {
         try {
-            return in.read();
+            return in.readInt();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return -1;
+        return END_CONNECTION;
+    }
+
+    public long readLong() {
+        try {
+            return in.readLong();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return END_CONNECTION;
     }
 
     public String readString() {
@@ -102,67 +122,100 @@ public class Connection {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return  -1;
+        return END_CONNECTION;
     }
 
-    public ArrayList<Integer> readIDs(int countFiles) {
-        ArrayList<Integer> result = new ArrayList<>();
+    public byte[] readPart() {
+        int countOfBytes = readInt();
+        byte[] part = new byte[countOfBytes];
+        try {
+            int readBytes = in.read(part);
+            if (readBytes != countOfBytes) {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return part;
+    }
+
+    public Set<Integer> readSet(int countFiles) {
+        Set<Integer> result = new HashSet<>();
         for (int i = 0; i < countFiles; i++) {
-            result.add(readInt());
+            int curId = readInt();
+            result.add(curId);
         }
         return result;
     }
 
-    public void sendListOfAvailableFiles(int size, ArrayList<FileInfo> files) {
+    public ClientInfo readClient() {
+        byte[] ip = new byte[COUNT_IP_PARTS];
         try {
-            out.write(size);
-            out.flush();
+            in.read(ip);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        for (FileInfo file: files) {
-            try {
-                out.write(file.getID());
-                out.write(file.getName().getBytes());
-                out.write(file.getSize());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        int port = readInt();
+        return new ClientInfo(ip, port);
+    }
+
+    public void sendListOfAvailableFiles(int size, Set<TrackerFileInfo> files) throws IOException {
+        out.writeInt(size);
+        out.flush();
+        for (TrackerFileInfo file: files) {
+            out.writeInt(file.getID());
+            out.writeUTF(file.getName());
+            out.writeLong(file.getSize());
+            out.flush();
         }
     }
 
-    public void sendInt(int id) {
-        try {
-            out.write(id);
+    public void sendType(int type) throws IOException {
+        sendInt(type);
+    }
+
+    public void sendLong(long l) throws IOException {
+        out.writeLong(l);
+        out.flush();
+    }
+
+    public void sendString(String s) throws IOException {
+        out.writeUTF(s);
+        out.flush();
+    }
+
+    public void sendInt(int i) throws IOException {
+        out.writeInt(i);
+        out.flush();
+    }
+
+    public void sendBoolean(boolean b) throws IOException {
+        out.writeBoolean(b);
+        out.flush();
+    }
+
+    public void sendSources(Set<ClientInfo> clientInfos) throws IOException {
+        out.writeInt(clientInfos.size());
+        out.flush();
+        for (ClientInfo clientInfo : clientInfos) {
+            out.write(clientInfo.getServerIP());
+            out.writeInt(clientInfo.getServerPort());
             out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+    }
+    public void sendIntegerSet(Set<Integer> num) throws IOException {
+        for (Integer number: num) {
+            out.writeInt(number);
+            out.flush();
         }
     }
 
-    public void sendBoolean(boolean b) {
-        try {
-            out.writeBoolean(b);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void sendPart(RandomAccessFile file, int offset, int len) throws IOException {
+        byte[] data = new byte[len];
+        file.read(data);
+        out.writeInt(len);
+        out.write(data, 0, len);
+        out.flush();
     }
 
-    public void sendSources(Set<Client> clients) {
-        try {
-            out.write(clients.size());
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Client client: clients) {
-            try {
-                out.write(client.getServerIP());
-                out.write(client.getServerPort());
-                out.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }
