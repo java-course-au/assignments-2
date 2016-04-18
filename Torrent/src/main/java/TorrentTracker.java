@@ -2,39 +2,93 @@
  * Created by n_buga on 31.03.16.
  */
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class TorrentTracker implements AutoCloseable {
     static public final int TIME_OUT_SCHEDULE =  20;
 
-    private Set<TrackerFileInfo> availableFiles;
+    private Set<Integer> idAvailableFiles;
     private Map<Integer, TrackerFileInfo> idFileMap;
     private int maxID = 0;
     private boolean end = false;
     private Thread serverThread;
     private final int TORRENT_PORT = 8081;
     private final int TIME_OUT_ACCEPT = 500;
+    private final String TRACKER_DIRECTORY = "TrackerData";
+    private final String FILES_DATA = "FilesData";
 
     public TorrentTracker() {
-        availableFiles = new HashSet<>();
+        idAvailableFiles = new HashSet<>();
         idFileMap = new HashMap<>();
+        updateFromFile();
+    }
+
+    private void updateFromFile() {
+        Path pathToFile = Paths.get(".", TRACKER_DIRECTORY, FILES_DATA);
+        if (!Files.exists(pathToFile)) {
+            return;
+        }
+        try (Scanner scanner = new Scanner(pathToFile.toFile())) {
+            int countOfFiles = scanner.nextInt();
+            for (int i = 0; i < countOfFiles; i++) {
+                int id = scanner.nextInt();
+                TrackerFileInfo curFileInfo = TrackerFileInfo.readFromFile(scanner);
+                idFileMap.put(id, new TrackerFileInfo(curFileInfo.getName(), curFileInfo.getSize(), curFileInfo.getID()));
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveToFile() {
+        Path pathToFile = Paths.get(".", TRACKER_DIRECTORY, FILES_DATA);
+        try {
+            Files.deleteIfExists(pathToFile);
+            Files.createDirectories(pathToFile.getParent());
+            Files.createFile(pathToFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try (PrintWriter writer = new PrintWriter(pathToFile.toString())){
+            writer.printf("%d\n", idFileMap.size());
+            for (Integer id: idFileMap.keySet()) {
+                writer.printf("%d\n", id);
+                idFileMap.get(id).writeToFile(writer);
+                writer.println();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void close() {
+        saveToFile();
         end = true;
         try {
             serverThread.join();
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void resetData() {
+        Path toDataFile = Paths.get(".", TRACKER_DIRECTORY, FILES_DATA);
+        try {
+            Files.deleteIfExists(toDataFile);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -46,7 +100,9 @@ public class TorrentTracker implements AutoCloseable {
 
     public void getListOfAvailableFiles(Connection connection) {
         try {
-            connection.sendListOfAvailableFiles(availableFiles.size(), availableFiles);
+            Set<TrackerFileInfo> availableFiles =
+                    idAvailableFiles.stream().map(idFileMap::get).collect(Collectors.toSet());
+            connection.sendListOfAvailableFiles(idAvailableFiles.size(), availableFiles);
         } catch (IOException e) {
             e.printStackTrace();
             connection.close();
@@ -77,7 +133,7 @@ public class TorrentTracker implements AutoCloseable {
         }
         idFileMap.put(maxID, new TrackerFileInfo(name, size, maxID));
         idFileMap.get(maxID).addClient(connection.getClientInfo());
-        availableFiles.add(idFileMap.get(maxID));
+        idAvailableFiles.add(maxID);
         try {
             connection.sendInt(maxID++);
         } catch (IOException e) {
@@ -173,13 +229,21 @@ public class TorrentTracker implements AutoCloseable {
     }
 
     private void addClient(ClientInfo curClientInfo, int idFile) {
-        TrackerFileInfo currentTrackerFileInfo = idFileMap.get(idFile);
-        for (ClientInfo clientInfo : currentTrackerFileInfo.getClientInfos()) {
-            if (clientInfo.myEquals(curClientInfo)) {
-                return;
+        try {
+            TrackerFileInfo currentTrackerFileInfo = idFileMap.get(idFile);
+            for (ClientInfo clientInfo : currentTrackerFileInfo.getClientInfos()) {
+                if (clientInfo.myEquals(curClientInfo)) {
+                    return;
+                }
             }
+            currentTrackerFileInfo.addClient(curClientInfo);
+            if (!idAvailableFiles.contains(idFile)) {
+                idAvailableFiles.add(idFile);
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Thi id we want to add:");
+            System.out.println(idFile);
         }
-        currentTrackerFileInfo.addClient(curClientInfo);
     }
 
     private Integer parseIntOrNull(String a) {
@@ -224,15 +288,16 @@ public class TorrentTracker implements AutoCloseable {
 
     private void deleteClientFromFileInfo(Connection connection) {
         ClientInfo curClientInfo = connection.getClientInfo();
-        Set<TrackerFileInfo> filesForRemove = new HashSet<>();
-        for (TrackerFileInfo file: availableFiles) {
+        Set<Integer> filesForRemove = new HashSet<>();
+        for (int id: idAvailableFiles) {
+            TrackerFileInfo file = idFileMap.get(id);
             file.getClientInfos().remove(curClientInfo);
             if (file.getClientInfos().size() == 0) {
-                filesForRemove.add(file);
+                filesForRemove.add(id);
             }
         }
-        for (TrackerFileInfo file: filesForRemove) {
-            availableFiles.remove(file);
+        for (int id: filesForRemove) {
+            idAvailableFiles.remove(id);
         }
     }
 

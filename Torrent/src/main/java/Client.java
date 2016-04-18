@@ -17,7 +17,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Client implements AutoCloseable{
     private ClientFileData clientFileData;
-
     private TorrentClient torrentClient;
     private TorrentServer torrentServer;
 
@@ -30,8 +29,13 @@ public class Client implements AutoCloseable{
     }
 
     public void close() {
+        clientFileData.saveDataToFile();
         torrentClient.close();
         torrentServer.close();
+    }
+
+    public void resetData() {
+        clientFileData.resetData();
     }
 
     public int getServerPort() {
@@ -42,12 +46,17 @@ public class Client implements AutoCloseable{
         return torrentClient.getIP();
     }
 
+    private enum State {NOT_STARTED, END, MISSED_CONNECTION, RUNNING};
+
     public class TorrentClient implements AutoCloseable {
+        private final int TIME_OUT_OF_WAITING_CONNECTION = 200;
         private Connection trackerConnection;
         private ScheduledExecutorService scheduledExecutorService;
         private final int serverPort = 8081;
         private Socket trackerSocket;
         private boolean end = false;
+        private String ipTorrent = "127.0.0.1";
+        private State state = State.NOT_STARTED;
         private Lock lock = new ReentrantLock(true);
 
         public class FileInfo {
@@ -81,21 +90,42 @@ public class Client implements AutoCloseable{
         }
 
         TorrentClient(String ipTorrent) {
-            trackerSocket = null;
+            this.ipTorrent = ipTorrent;
+            Thread connectThread = new Thread(this::tryConnect);
+            connectThread.start();
             try {
-                trackerSocket = new Socket(ipTorrent, serverPort);
-            } catch (IOException e) {
+                connectThread.join(TIME_OUT_OF_WAITING_CONNECTION);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
                 return;
             }
-            trackerConnection = new Connection(trackerSocket);
             scheduledExecutorService = Executors.newScheduledThreadPool(1);
             scheduledExecutorService.scheduleAtFixedRate(this::update, 0,
                     TorrentTracker.TIME_OUT_SCHEDULE / 2, TimeUnit.SECONDS);
         }
 
+        private void connect() {
+            trackerSocket = null;
+            try {
+                trackerSocket = new Socket(ipTorrent, serverPort);
+                state = State.RUNNING;
+            } catch (IOException e) {
+                return;
+            }
+            trackerConnection = new Connection(trackerSocket);
+        }
+
+        private void tryConnect() {
+            System.out.println("Try to connect");
+            while (state != State.RUNNING) {
+                connect();
+            }
+            System.out.println("Connection successfully repaired");
+        }
+
         public void close() {
             System.out.println("Closed");
+            state = State.END;
             end = true;
             scheduledExecutorService.shutdown();
             try {
@@ -159,27 +189,10 @@ public class Client implements AutoCloseable{
             return id;
         }
 
-        private Set<ClientInfo> sources(int id) {
-            lock.lock();
-            try {
-                trackerConnection.sendType(Connection.SOURCES_QUERY);
-                trackerConnection.sendInt(id);
-            } catch (IOException e) {
-                e.printStackTrace();
-                trackerConnection.close();
-                lock.unlock();
-                return null;
-            }
-            int count = trackerConnection.readInt();
-            Set<ClientInfo> result = new HashSet<>();
-            for (int i = 0; i < count; i++) {
-                result.add(trackerConnection.readClient());
-            }
-            lock.unlock();
-            return result;
-        }
-
         public void update() {
+            if (state == State.MISSED_CONNECTION) {
+                return;
+            }
             lock.lock();
             try {
                 trackerConnection.sendType(Connection.UPDATE_QUERY);
@@ -188,17 +201,25 @@ public class Client implements AutoCloseable{
                 trackerConnection.sendIntegerSet(clientFileData.getIdAvailableFiles());
             } catch (SocketException e) {
                 System.out.println("Connection with server was missed.");
+                state = State.MISSED_CONNECTION;
                 lock.unlock();
+                tryConnect();
                 return;
             } catch (IOException e) {
                 e.printStackTrace();
                 trackerConnection.close();
+                lock.unlock();
+                return;
             }
 
             try {
                 trackerConnection.readBoolean();
             } catch (IOException e) {
+                state = State.MISSED_CONNECTION;
                 System.out.println("Connection with server was missed.");
+                lock.unlock();
+                tryConnect();
+                return;
             }
             lock.unlock();
         }
@@ -273,6 +294,26 @@ public class Client implements AutoCloseable{
             });
             loadThread.start();
             return loadThread;
+        }
+
+        private Set<ClientInfo> sources(int id) {
+            lock.lock();
+            try {
+                trackerConnection.sendType(Connection.SOURCES_QUERY);
+                trackerConnection.sendInt(id);
+            } catch (IOException e) {
+                e.printStackTrace();
+                trackerConnection.close();
+                lock.unlock();
+                return null;
+            }
+            int count = trackerConnection.readInt();
+            Set<ClientInfo> result = new HashSet<>();
+            for (int i = 0; i < count; i++) {
+                result.add(trackerConnection.readClient());
+            }
+            lock.unlock();
+            return result;
         }
 
         private void savePart(Connection curConnection, int part, int id, RandomAccessFile randomAccessFile) {
@@ -401,8 +442,7 @@ public class Client implements AutoCloseable{
     }
 
     public Set<TorrentClient.FileInfo> getList() {
-        Set<TorrentClient.FileInfo> files = torrentClient.getList();
-        return files;
+        return torrentClient.getList();
     }
 
     public int upload(Path filePath) {

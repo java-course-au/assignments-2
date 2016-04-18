@@ -30,6 +30,7 @@ public final class ClientMain {
             String command = input.next();
             switch (command) {
                 case "list":
+                    System.out.println(command);
                     Set<Client.TorrentClient.FileInfo> answer = client.getList();
                     System.out.printf("The count of files: %d\nFiles are:\n", answer.size());
                     for (Client.TorrentClient.FileInfo file: answer) {

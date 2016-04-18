@@ -34,6 +34,8 @@ public class TorrentTests {
         assertTrue(listAvailableFiles.size() == 0);
         client.close();
         torrent.close();
+        client.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -57,6 +59,8 @@ public class TorrentTests {
         Files.deleteIfExists(testPath);
         client.close();
         torrent.close();
+        client.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -81,6 +85,8 @@ public class TorrentTests {
         Files.deleteIfExists(testPath);
         torrent.close();
         client.close();
+        client.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -116,6 +122,9 @@ public class TorrentTests {
         client1.close();
         client2.close();
         torrent.close();
+        client1.resetData();
+        client2.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -152,6 +161,9 @@ public class TorrentTests {
         client1.close();
         client2.close();
         torrent.close();
+        client1.resetData();
+        client2.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -175,7 +187,11 @@ public class TorrentTests {
         Files.deleteIfExists(testPath);
         Files.deleteIfExists(path);
         client1.close();
+        client2.close();
         torrent.close();
+        client1.resetData();
+        client2.resetData();
+        torrent.resetData();
     }
 
     @Test
@@ -205,6 +221,82 @@ public class TorrentTests {
         Files.deleteIfExists(testPath);
         Files.deleteIfExists(path);
         client1.close();
+        client2.close();
         torrent.close();
+        client1.resetData();
+        client2.resetData();
+        torrent.resetData();
+    }
+
+    @Test
+    public void testOnSaveClientData() throws InterruptedException, IOException {
+        final int curID = 0;
+        TorrentTracker torrent = new TorrentTracker();
+        torrent.start();
+        Thread.sleep(TIME_OUT_AFTER_SERVER_START);
+        Client client = new Client(TORRENT_IP);
+        Thread.sleep(TIME_OUT_FOR_UPDATE);
+        Path testPath = Paths.get(".", TEST_NAME);
+        Files.deleteIfExists(testPath);
+        Files.createFile(testPath);
+        client.upload(testPath);
+        Thread.sleep(TIME_OUT_AFTER_UPLOAD_FILE);
+        Set<Client.TorrentClient.FileInfo> fileInfos1 = client.getList();
+        client.close();
+        client = new Client(TORRENT_IP);
+        Thread.sleep(TIME_OUT_FOR_UPDATE);
+        Set<Client.TorrentClient.FileInfo> fileInfos2 = client.getList();
+        assertTrue(fileInfos1.size() == fileInfos2.size());
+        assertTrue(fileInfos1.size() == 1);
+        for (Client.TorrentClient.FileInfo fileInfo1: fileInfos1) {
+            for (Client.TorrentClient.FileInfo fileInfo2: fileInfos2) {
+                assertTrue(fileInfo1.getName().equals(fileInfo2.getName()));
+                assertTrue(fileInfo1.getSize() == fileInfo2.getSize());
+                assertTrue(fileInfo1.getID() == fileInfo2.getID());
+            }
+        }
+        Files.deleteIfExists(testPath);
+        torrent.close();
+        client.close();
+        client.resetData();
+        torrent.resetData();
+    }
+
+    @Test
+    public void TestOnSaveServerData() throws InterruptedException, IOException {
+        final int curID = 0;
+        TorrentTracker torrent = new TorrentTracker();
+        torrent.start();
+        Thread.sleep(TIME_OUT_AFTER_SERVER_START);
+        Client client = new Client(TORRENT_IP);
+        Thread.sleep(TIME_OUT_FOR_UPDATE);
+        Path testPath = Paths.get(".", TEST_NAME);
+        Files.deleteIfExists(testPath);
+        Files.createFile(testPath);
+        client.upload(testPath);
+        Thread.sleep(TIME_OUT_AFTER_UPLOAD_FILE);
+        Set<Client.TorrentClient.FileInfo> fileInfos1 = client.getList();
+        client.close();
+        torrent.close();
+        torrent = new TorrentTracker();
+        torrent.start();
+        Thread.sleep(TIME_OUT_AFTER_SERVER_START);
+        client = new Client(TORRENT_IP);
+        Thread.sleep(TIME_OUT_FOR_UPDATE);
+        Set<Client.TorrentClient.FileInfo> fileInfos2 = client.getList();
+        assertTrue(fileInfos1.size() == fileInfos2.size());
+        assertTrue(fileInfos1.size() == 1);
+        for (Client.TorrentClient.FileInfo fileInfo1: fileInfos1) {
+            for (Client.TorrentClient.FileInfo fileInfo2: fileInfos2) {
+                assertTrue(fileInfo1.getName().equals(fileInfo2.getName()));
+                assertTrue(fileInfo1.getSize() == fileInfo2.getSize());
+                assertTrue(fileInfo1.getID() == fileInfo2.getID());
+            }
+        }
+        Files.deleteIfExists(testPath);
+        torrent.close();
+        client.close();
+        client.resetData();
+        torrent.resetData();
     }
 }
