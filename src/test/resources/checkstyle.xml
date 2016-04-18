@@ -171,6 +171,7 @@
         <!--<module name="FinalParameters"/>-->
         <module name="TodoComment"/>
         <module name="UpperEll"/>
+        <module name="DeclarationOrderCheck"/>
 
         <module name="VariableDeclarationUsageDistance"/>
         <module name="OneStatementPerLine"/>
@@ -185,6 +186,12 @@
         <module name="MultipleVariableDeclarations"/>
 
         <module name="DeclarationOrder"/>
-    </module>
 
+        <module name="FileContentsHolder"/>
+    </module>
+    <module name="SuppressionCommentFilter">
+        <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+        <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+        <property name="checkFormat" value="$1"/>
+    </module>
 </module>
