@@ -18,6 +18,10 @@ public class TorrentTests {
     private final int TIME_OUT_AFTER_SERVER_START = 100;
     private final int TIME_OUT_FOR_UPDATE = 50;
     private final int TIME_OUT_AFTER_UPLOAD_FILE = 100;
+    private final String TEST_NAME_1 = "TorrentTest1";
+    private final String TEST_NAME_2 = "TorrentTest2";
+    private final String TEST_NAME = "TorrentTest";
+    private final String TEST_CONTAIN = "Hello!";
 
     @Test
     public void verySimpleListTest() throws IOException, InterruptedException {
@@ -39,7 +43,6 @@ public class TorrentTests {
         Thread.sleep(TIME_OUT_AFTER_SERVER_START);
         Client client = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME = "TorrentTest";
         Path testPath = Paths.get(".", TEST_NAME);
         Files.deleteIfExists(testPath);
         Files.createFile(testPath);
@@ -64,7 +67,6 @@ public class TorrentTests {
         Thread.sleep(TIME_OUT_AFTER_SERVER_START);
         Client client = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME = "TorrentTest";
         Path testPath = Paths.get(".", TEST_NAME);
         Files.deleteIfExists(testPath);
         Files.createFile(testPath);
@@ -89,8 +91,6 @@ public class TorrentTests {
         Client client1 = new Client(TORRENT_IP);
         Client client2 = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME_1 = "TorrentTest1";
-        final String TEST_NAME_2 = "TorrentTest2";
         Path testPath1 = Paths.get(".", TEST_NAME_1);
         Path testPath2 = Paths.get(".", TEST_NAME_2);
         Files.deleteIfExists(testPath1);
@@ -126,8 +126,6 @@ public class TorrentTests {
         Client client1 = new Client(TORRENT_IP);
         Client client2 = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME_1 = "TorrentTest1";
-        final String TEST_NAME_2 = "TorrentTest2";
         Path testPath1 = Paths.get(".", TEST_NAME_1);
         Path testPath2 = Paths.get(".", TEST_NAME_2);
         Files.deleteIfExists(testPath1);
@@ -163,7 +161,6 @@ public class TorrentTests {
         Thread.sleep(TIME_OUT_AFTER_SERVER_START);
         Client client1 = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME = "TorrentTest";
         Path testPath = Paths.get(".", TEST_NAME);
         Files.deleteIfExists(testPath);
         Files.createFile(testPath);
@@ -188,8 +185,6 @@ public class TorrentTests {
         Thread.sleep(TIME_OUT_AFTER_SERVER_START);
         Client client1 = new Client(TORRENT_IP);
         Thread.sleep(TIME_OUT_FOR_UPDATE);
-        final String TEST_NAME = "TorrentTest";
-        final String TEST_CONTAIN = "Hello!";
         Path testPath = Paths.get(".", TEST_NAME);
         Files.deleteIfExists(testPath);
         Files.createFile(testPath);
