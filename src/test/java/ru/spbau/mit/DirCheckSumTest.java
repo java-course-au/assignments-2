@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.*;
 
@@ -20,7 +21,7 @@ public class DirCheckSumTest {
 
     private static int TEST_FILES_NUM = 4;
 
-//    @Before
+    @Before
     public void fillTempDir() throws IOException {
         for (int i = 0; i < TEST_FILES_NUM; i++) {
             File file;
@@ -35,8 +36,17 @@ public class DirCheckSumTest {
     }
 
     @Test
-    public void testCheckSumOneThread() throws IOException, NoSuchAlgorithmException {
-        fillTempDir();
-        DirCheckSum.checkSumOneThread(folder.getRoot().toPath());
+    public void testCheckSumOneThread() throws
+            IOException,
+            NoSuchAlgorithmException,
+            ExecutionException,
+            InterruptedException {
+        //fillTempDir();
+        DirCheckSum checker = new DirCheckSum();
+        byte[] oneThreadRes = checker.checkSumOneThread(folder.getRoot().toPath());
+        byte[] threadPoolRes = checker.checkSumThreadPool(folder.getRoot().toPath());
+        byte[] forkJoinRes = checker.checkSumForkJoin(folder.getRoot().toPath());
+//        assertEquals(oneThreadRes, threadPoolRes);
+        assertEquals(threadPoolRes, forkJoinRes);
     }
 }
