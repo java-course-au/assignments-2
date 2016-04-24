@@ -6,44 +6,50 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 public class DirCheckSumTest {
+    private static final int TEST_FILES_NUM = 4;
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-
-    private static int TEST_FILES_NUM = 4;
+    private DirCheckSum checker;
 
     @Before
     public void fillTempDir() throws IOException {
-        for (int i = 0; i < TEST_FILES_NUM; i++) {
+        for (byte i = 0; i < TEST_FILES_NUM; i++) {
             File file;
             try {
                 file = folder.newFile();
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
-            byte[] a = {0};
+            byte[] a = {i};
             Files.write(file.toPath(), a);
         }
+        checker = new DirCheckSum();
     }
 
     @Test
     public void testCheckSumOneThread() throws
             Exception {
-        //fillTempDir();
-        DirCheckSum checker = new DirCheckSum();
         byte[] oneThreadRes = checker.checkSumOneThread(folder.getRoot().toPath());
         byte[] threadPoolRes = checker.checkSumThreadPool(folder.getRoot().toPath());
         byte[] forkJoinRes = checker.checkSumForkJoin(folder.getRoot().toPath());
-//        assertEquals(oneThreadRes, threadPoolRes);
-        assertEquals(threadPoolRes, forkJoinRes);
+        assertArrayEquals(oneThreadRes, threadPoolRes);
+        assertArrayEquals(threadPoolRes, forkJoinRes);
+        assertArrayEquals(forkJoinRes, oneThreadRes);
+    }
+
+    @Test
+    public void testTimeCompare() throws Exception {
+        checker.compareTime(folder.getRoot().toPath());
+
+        // for
+        //     checker.compareTime(Paths.get("/home/liza/term4/java/"));
+        // the output was
+        //     INFO: One thread time: 13298 Thread Pool time: 550 Fork-Join time: 992
     }
 }
