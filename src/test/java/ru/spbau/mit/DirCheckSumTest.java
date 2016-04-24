@@ -37,10 +37,7 @@ public class DirCheckSumTest {
 
     @Test
     public void testCheckSumOneThread() throws
-            IOException,
-            NoSuchAlgorithmException,
-            ExecutionException,
-            InterruptedException {
+            Exception {
         //fillTempDir();
         DirCheckSum checker = new DirCheckSum();
         byte[] oneThreadRes = checker.checkSumOneThread(folder.getRoot().toPath());

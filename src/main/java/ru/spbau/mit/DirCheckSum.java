@@ -1,206 +1,130 @@
 package ru.spbau.mit;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class DirCheckSum {
 
-    private static int BUFFER_SIZE = 4096;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
     private final ForkJoinPool fjp = new ForkJoinPool();
+    private final Logger logger = Logger.getLogger("CHECKER");
 
-
-//    static String toMD5(String path) throws IOException {
-//        FileInputStream fis = new FileInputStream(new File("foo"));
-//        String md5 = DigestUtils.md5Hex(fis);
-//        fis.close();
-//        return md5;
-//    }
 
     public byte[] checkSumOneThread(Path path) throws NoSuchAlgorithmException, IOException {
         MessageDigest md5 = MessageDigest.getInstance("MD5");
+        String tag = "ONE THREAD";
+        logger.info(tag + "\n" + path.toString());
 
         if(Files.isDirectory(path)) {
             md5.update(path.toString().getBytes());
-            Files.list(path).sorted().forEach(fileEntry -> {
-                try {
-                    md5.update(checkSumOneThread(fileEntry));
-                } catch (IOException | NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
-            });
-//            for(File fileEntry: Files.list(path).sorted().toArray()) { //path.toFile().listFiles()) {
-//                md5.update(checkSumOneThread(fileEntry.toPath()));
-//            }
-        } else {
-            DigestInputStream in = new DigestInputStream(
-                    new FileInputStream(path.toFile()),
-                    md5);
-            in.on(true);
-            byte[] tmp = new byte[BUFFER_SIZE];
-            try {
-                while(in.read(tmp, 0, BUFFER_SIZE) >= BUFFER_SIZE) {}
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
+            List<Path> files = Files.list(path).sorted().collect(Collectors.toList());
+            for(Path fileEntry: files) {
+//                logger.info("ONE THREAD: fileEntry " + fileEntry.toString());
+                md5.update(checkSumOneThread(fileEntry));
             }
+        } else {
+            countMD5(path, md5);
+//            logger.info("ONE THREAD: counted hash of " + path.toString());
         }
 
         return md5.digest();
     }
 
-    public byte[] checkSumThreadPool(Path path) throws NoSuchAlgorithmException, ExecutionException, InterruptedException, IOException {
+    public byte[] checkSumThreadPool(Path path) throws Exception {
         MessageDigest md5 = MessageDigest.getInstance("MD5");
-//        ArrayList<Future<?>> subtasks = new ArrayList<>();
+        String tag = "THREAD POOL";
+        logger.info(tag + "\n" + path.toString());
 
         if(Files.isDirectory(path)) {
             md5.update(path.toString().getBytes());
-            //for(File fileEntry: (File[]) Files.list(path).sorted().toArray()) { //path.toFile().listFiles()) {
 
-
-            List<Future<byte[]>> subtasks = Files.list(path)
+            List<Pair<Future<byte[]>, String>> subtasks = Files.list(path)
                     .sorted()
                     .map(fileEntry -> {
-                return threadPool.submit(() -> {
-                    try {
-                        return checkSumThreadPool(fileEntry);
-                    } catch (FileNotFoundException |
-                            InterruptedException |
-                            ExecutionException |
-                            NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
-                    }
-                });
-//                subtasks.add(task);
-            }).collect(Collectors.toList());
-//
-//                    .forEach(task -> {
-//                byte[] res = new byte[0];
-//                try {
-//                    res = task.get();
-//                } catch (InterruptedException | ExecutionException e) {
-//                    e.printStackTrace();
-//                    throw new RuntimeException(e);
-//                }
-//                md5.update(res);
-//            });
-            for(Future<byte[]> task: subtasks) {
-                byte[] res = task.get();
-                md5.update(res);
-            }
-        } else {
-            DigestInputStream in = new DigestInputStream(
-                    new FileInputStream(path.toFile()),
-                    md5);
-            in.on(true);
-            byte[] tmp = new byte[BUFFER_SIZE];
-            try {
-                while(in.read(tmp, 0, BUFFER_SIZE) >= BUFFER_SIZE) {}
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        }
-
-        return md5.digest();
-    }
-
-    public byte[] checkSumForkJoin(Path path) throws
-            NoSuchAlgorithmException,
-            ExecutionException,
-            InterruptedException,
-            IOException {
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-//        ArrayList<Future<?>> subtasks = new ArrayList<>();
-
-        if(Files.isDirectory(path)) {
-            md5.update(path.toString().getBytes());
-            List<ForkJoinTask<byte[]>> subtasks = Files.list(path)
-                    .sorted()
-                    .map(fileEntry -> {
-                        return fjp.submit(() -> {
+                        Future<byte[]> task = threadPool.submit(() -> {
                             try {
-                                return checkSumForkJoin(fileEntry);
-                            } catch (FileNotFoundException |
-                                    InterruptedException |
-                                    ExecutionException |
-                                    NoSuchAlgorithmException e) {
+//                            logger.info("THREAD POOL: submitting fileEntry " + fileEntry.toString());
+                                return checkSumThreadPool(fileEntry);
+                            } catch (Exception e) {
                                 e.printStackTrace();
                                 throw new RuntimeException(e);
                             }
                         });
-//                subtasks.add(task);
+                        return new Pair<>(task, fileEntry.toString());
                     }).collect(Collectors.toList());
-            for(ForkJoinTask<byte[]> task: subtasks) {
-                byte[] res = task.get();
+
+            for(Pair<Future<byte[]>, String> task: subtasks) {
+                byte[] res = task.getKey().get();
+                logger.info(tag + ": counting " + Arrays.toString(res) + "\n" + task.getValue());
                 md5.update(res);
             }
-
-
-//                    .forEach(task -> {
-//                byte[] res = new byte[0];
-//                try {
-//                    res = task.get();
-//                } catch (InterruptedException | ExecutionException e) {
-//                    e.printStackTrace();
-//                    throw new RuntimeException(e);
-//                }
-//                md5.update(res);
-//            });
-
-//            for(File fileEntry: (File[]) Files.list(path).sorted().toArray()) {//path.toFile().listFiles()) {
-//                ForkJoinTask<byte[]> task = fjp.submit(() -> {
-//                    try {
-//                        return checkSumForkJoin(fileEntry.toPath());
-//                    } catch (FileNotFoundException |
-//                            InterruptedException |
-//                            ExecutionException |
-//                            NoSuchAlgorithmException e) {
-//                        e.printStackTrace();
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-//                subtasks.add(task);
-//            }
         } else {
-            DigestInputStream in = new DigestInputStream(
-                    new FileInputStream(path.toFile()),
-                    md5);
-            in.on(true);
-            byte[] tmp = new byte[BUFFER_SIZE];
-            try {
-                while(in.read(tmp, 0, BUFFER_SIZE) >= BUFFER_SIZE) {}
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+            countMD5(path, md5);
+//            logger.info("THREAD POOL: single file " + path.toString() + " " + Arrays.toString(tmp));
         }
 
         return md5.digest();
     }
 
+    public byte[] checkSumForkJoin(Path path) throws Exception {
+        MessageDigest md5 = MessageDigest.getInstance("MD5");
+        String tag = "FORK JOIN";
+        logger.info(tag + "\n" + path.toString());
 
-//    public class CheckSumForkJoin<T> implements CheckSum {
-//
-//        @Override
-//        public String checkSum(String dirname) {
-//            return null;
-//        }
-//    }
+        if(Files.isDirectory(path)) {
+            md5.update(path.toString().getBytes());
+            List<Pair<ForkJoinTask<byte[]>, String>> subtasks = Files.list(path)
+                    .sorted()
+                    .map(fileEntry -> {
+                        ForkJoinTask<byte[]> task = fjp.submit(() -> {
+                            try {
+                                return checkSumForkJoin(fileEntry);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                throw new RuntimeException(e);
+                            }
+                        });
+                        return new Pair<>(task, path.toString());
+                    }).collect(Collectors.toList());
+            for(Pair<ForkJoinTask<byte[]>, String> task: subtasks) {
+                byte[] res = task.getKey().get();
+                logger.info(tag + ": counting " + Arrays.toString(res) + "\n" + task.getValue());
+                md5.update(res);
+            }
+
+        } else {
+            countMD5(path, md5);
+        }
+
+        return md5.digest();
+    }
+
+    private void countMD5(Path path, MessageDigest md5) throws FileNotFoundException {
+        DigestInputStream in = new DigestInputStream(
+                new FileInputStream(path.toFile()),
+                md5);
+        in.on(true);
+        int BUFFER_SIZE = 4096;
+        byte[] tmp = new byte[BUFFER_SIZE];
+        try {
+            while(in.read(tmp, 0, BUFFER_SIZE) >= BUFFER_SIZE) {}
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 }
 
 /*
