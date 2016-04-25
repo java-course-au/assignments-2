@@ -83,7 +83,6 @@ class Canvas extends JPanel implements DefaultMouseListener {
         }
 
         points.remove(points.size() - 1);
-
         repaint();
     }
 
