@@ -10,11 +10,11 @@ public final class Main {
     public static void main(String[] args) {
         final JFrame frame = new JFrame("Points");
         final Canvas canvas = new Canvas();
-        final JMenuBar menubar = buildMenuBar(canvas);
+        final JMenuBar menuBar = buildMenuBar(canvas);
 
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        frame.setJMenuBar(menubar);
+        frame.setJMenuBar(menuBar);
         frame.add(canvas);
 
         frame.setSize(1200, 600);
@@ -26,6 +26,18 @@ public final class Main {
         // Return JMenuBar with one JMenu called "Main"
         // This JMenu should contain "Calculate" and "Clear" JMenuItems which call same methods in Canvas
 
-        throw new UnsupportedOperationException();
+        JMenuItem calculateItem = new JMenuItem("Calculate");
+        calculateItem.addActionListener((e) -> canvas.calculate());
+
+        JMenuItem clearItem = new JMenuItem("Clear");
+        clearItem.addActionListener((e) -> canvas.clear());
+
+        JMenu jMenu = new JMenu("Menu");
+        jMenu.add(calculateItem);
+        jMenu.add(clearItem);
+
+        JMenuBar jMenuBar = new JMenuBar();
+        jMenuBar.add(jMenu);
+        return jMenuBar;
     }
 }
