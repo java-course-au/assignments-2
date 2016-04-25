@@ -77,12 +77,9 @@ class Canvas extends JPanel implements DefaultMouseListener {
                     subtract(newPoint, pointsInHull.get(pointsInHull.size() - 1)),
                     subtract(pointsInHull.get(pointsInHull.size() - 2),
                             pointsInHull.get(pointsInHull.size() - 1))) > 0) {
-                //System.err.println("Rm " + pointsInHull.get(pointsInHull.size() - 1).getX() + " " +
-                //        pointsInHull.get(pointsInHull.size() - 1).getY());
                 pointsInHull.remove(pointsInHull.size() - 1);
             }
             pointsInHull.add(newPoint);
-            //System.err.println("Add " + newPoint.getX() + " " + newPoint.getY());
         }
 
         points.remove(points.size() - 1);
