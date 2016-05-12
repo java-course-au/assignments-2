@@ -1,11 +1,7 @@
 package ru.spbau.mit;
 
-import javafx.util.Pair;
-
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -24,15 +20,18 @@ public final class FirstPartTasks {
 
     // Список треков, отсортированный лексикографически по названию, включающий все треки альбомов из 'albums'
     public static List<String> allTracksSorted(Stream<Album> albums) {
-        return albums.flatMap((album -> album.getTracks().stream())).map(Track::getName).sorted().
-                collect(Collectors.toList());
+        return albums.flatMap((album -> album.getTracks().stream()))
+                .map(Track::getName)
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     // Список альбомов, в которых есть хотя бы один трек с рейтингом более 95, отсортированный по названию
     public static List<Album> sortedFavorites(Stream<Album> s) {
-        return s.filter(album -> !(album.getTracks().stream().map(Track::getRating).filter(rating -> rating > 95).
-                collect(Collectors.toList()).isEmpty())).
-                sorted((a1, a2) -> a1.getName().compareTo(a2.getName())).collect(Collectors.toList());
+        return s.filter(album -> !(album.getTracks().stream().map(Track::getRating).filter(rating -> rating > 95)
+                .collect(Collectors.toList()).isEmpty()))
+                .sorted((a1, a2) -> a1.getName().compareTo(a2.getName()))
+                .collect(Collectors.toList());
     }
 
     // Сгруппировать альбомы по артистам
@@ -42,33 +41,41 @@ public final class FirstPartTasks {
 
     // Сгруппировать альбомы по артистам (в качестве значения вместо объекта 'Artist' использовать его имя)
     public static Map<Artist, List<String>> groupByArtistMapName(Stream<Album> albums) {
-        return albums.collect(Collectors.groupingBy(Album::getArtist, Collectors.
-                mapping(Album::getName, Collectors.toList())));
+        return albums.collect(Collectors.groupingBy(Album::getArtist,
+                Collectors.mapping(Album::getName, Collectors.toList())));
     }
 
     // Число повторяющихся альбомов в потоке
     public static long countAlbumDuplicates(Stream<Album> albums) {
-        return albums.collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).values().
-                stream().filter(value -> value > 1).count();
+        return albums.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .values().stream()
+                .filter(value -> value > 1)
+                .count();
     }
 
     // Альбом в котором максимум рейтинга минимален
     // (если в альбоме нет ни одного трека, считать, что максимум рейтинга в нем --- 0)
     public static Optional<Album> minMaxRating(Stream<Album> albums) {
-        return albums.min(Comparator.comparingInt(a -> a.getTracks().stream().mapToInt(Track::getRating).max().orElse(0)));
+        return albums.min(Comparator.comparingInt(a ->
+                    a.getTracks().stream()
+                        .mapToInt(Track::getRating)
+                        .max().orElse(0)
+                )
+        );
     }
 
     // Список альбомов, отсортированный по убыванию среднего рейтинга его треков (0, если треков нет)
     public static List<Album> sortByAverageRating(Stream<Album> albums) {
         return albums.sorted((a1, a2) -> Double.compare(
-                a2.getTracks().stream().mapToInt(Track::getRating).average().orElse(0),
-                a1.getTracks().stream().mapToInt(Track::getRating).average().orElse(0))).collect(Collectors.toList());
+                    a2.getTracks().stream().mapToInt(Track::getRating).average().orElse(0),
+                    a1.getTracks().stream().mapToInt(Track::getRating).average().orElse(0)))
+                .collect(Collectors.toList());
     }
 
     // Произведение всех чисел потока по модулю 'modulo'
     // (все числа от 0 до 10000)
     public static int moduloProduction(IntStream stream, int modulo) {
-        return stream.reduce((a1, a2) -> (a1*(a2%modulo))%modulo).orElse(0);
+        return stream.reduce((a1, a2) -> (a1 * (a2 % modulo)) % modulo).orElse(0);
     }
 
     // Вернуть строку, состояющую из конкатенаций переданного массива, и окруженную строками "<", ">"
