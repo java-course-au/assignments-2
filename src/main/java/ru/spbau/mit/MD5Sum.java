@@ -49,11 +49,11 @@ public final class MD5Sum {
         return "";
     }
 
-    public static String countMD5SumInOneThread(File file) throws IOException {
+    public static String countMD5SumInOneThread(File file) {
         return getDirMD5Sum(file);
     }
 
-    public static String countMD5SumInExecutorService(File file) throws IOException {
+    public static String countMD5SumInExecutorService(File file) {
         service = Executors.newCachedThreadPool();
 
         Future<String> res = service.submit(() -> getDirMD5SumExecuteService(file));
@@ -115,7 +115,7 @@ public final class MD5Sum {
     }
 
     private static final class MD5SumTask extends RecursiveTask<String> {
-        private File file;
+        private final File file;
 
         private MD5SumTask(File file) {
             this.file = file;
