@@ -8,17 +8,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
-public class MD5Sum {
-    static ExecutorService service;
+public final class MD5Sum {
+    private MD5Sum(){}
 
-    static private String getFileMD5Sum(File file) throws IOException {
+    private static ExecutorService service;
+
+    private static String getFileMD5Sum(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);
         String md5 = DigestUtils.md5Hex(fis);
         fis.close();
         return md5;
     }
 
-    static private String getDirMD5Sum(File file) {
+    private static String getDirMD5Sum(File file) {
         if (file.isFile()) {
             try {
                 return getFileMD5Sum(file);
@@ -47,11 +49,11 @@ public class MD5Sum {
         return "";
     }
 
-    static public String countMD5SumInOneThread(File file) throws IOException {
+    public static String countMD5SumInOneThread(File file) throws IOException {
         return getDirMD5Sum(file);
     }
 
-    static public String countMD5SumInExecutorService(File file) throws IOException {
+    public static String countMD5SumInExecutorService(File file) throws IOException {
         service = Executors.newCachedThreadPool();
 
         Future<String> res = service.submit(() -> getDirMD5SumExecuteService(file));
@@ -89,7 +91,7 @@ public class MD5Sum {
             return "";
         }
 
-        ArrayList<Future<String> > md5sums = new ArrayList<>();
+        ArrayList<Future<String>> md5sums = new ArrayList<>();
         for (File currentFile : files) {
             if (currentFile.isDirectory() || currentFile.isFile()) {
                 md5sums.add(service.submit(() -> getDirMD5SumExecuteService(currentFile)));
@@ -107,15 +109,15 @@ public class MD5Sum {
         return DigestUtils.md5Hex(preDirMD5sum);
     }
 
-    static public String countMD5SumInForkJoin(File file) {
+    public static String countMD5SumInForkJoin(File file) {
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         return forkJoinPool.invoke(new MD5SumTask(file));
     }
 
-    static private class MD5SumTask extends RecursiveTask<String> {
-        File file;
+    private static final class MD5SumTask extends RecursiveTask<String> {
+        private File file;
 
-        public MD5SumTask(File file) {
+        private MD5SumTask(File file) {
             this.file = file;
         }
 
