@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.concurrent.*;
 
 public final class MD5Sum {
-    private MD5Sum(){}
-
     private static ExecutorService service;
+
+    private MD5Sum(){}
 
     private static String getFileMD5Sum(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);
