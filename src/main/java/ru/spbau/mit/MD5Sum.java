@@ -26,6 +26,7 @@ public final class MD5Sum {
                 return getFileMD5Sum(file);
             } catch (IOException e) {
                 e.printStackTrace();
+                return "";
             }
         } else if (file.isDirectory()) {
             assert file.isDirectory();
@@ -35,6 +36,7 @@ public final class MD5Sum {
                 preDirMD5sum = file.getCanonicalPath();
             } catch (IOException e) {
                 e.printStackTrace();
+                return "";
             }
             File[] files = file.listFiles();
 
