@@ -8,7 +8,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -17,7 +16,6 @@ public class NonBlockingServerTest {
 
 
     private static final String TEXT = "Still Alive";
-    private static final Logger LOGGER = Logger.getLogger("test");
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     private File file;
@@ -45,7 +43,6 @@ public class NonBlockingServerTest {
     public void testLocalDownload() throws Exception {
         Socket client = new Socket("localhost", NonBlockingServer.PORT);
         DataInputStream input = new DataInputStream(client.getInputStream());
-        DataOutputStream output = new DataOutputStream(client.getOutputStream());
 
         String response = input.readUTF();
         assertEquals(response, TEXT);
