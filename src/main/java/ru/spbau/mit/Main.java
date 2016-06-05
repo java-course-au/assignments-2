@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Main {
+public final class Main {
     private static final int MILLIS = 1000;
+
+    private Main() {
+    }
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {

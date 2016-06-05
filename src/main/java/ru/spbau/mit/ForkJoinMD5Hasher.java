@@ -38,7 +38,9 @@ public class ForkJoinMD5Hasher implements MD5Hasher {
                         subTasks.add(task);
                         task.fork();
                     });
-                    StringBuilder stringBuilder = new StringBuilder(DigestUtils.md5Hex(path.getFileName().toString()));
+                    StringBuilder stringBuilder = new StringBuilder(
+                            DigestUtils.md5Hex(path.getFileName().toString())
+                    );
                     for (MD5HasherTask task : subTasks) {
                         stringBuilder.append(task.join());
                     }
