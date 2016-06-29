@@ -15,6 +15,9 @@ public final class Server {
     public static final int PORT = 17239;
     private static final String FILENAME = "datafile";
 
+    private Server() {
+    }
+
     public static void main(String[] args) throws IOException {
         byte[] fileContents = Files.readAllBytes(Paths.get(FILENAME));
 
@@ -47,8 +50,5 @@ public final class Server {
                 }
             }
         }
-    }
-
-    private Server() {
     }
 }

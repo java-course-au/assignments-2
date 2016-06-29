@@ -6,6 +6,9 @@ import java.net.Socket;
 public final class Client {
     private static final int MAX_BYTES = 1000000;
 
+    private Client() {
+    }
+
     public static void main(String[] args) throws IOException {
         try (Socket socket = new Socket("localhost", Server.PORT)) {
             byte[] bytes = new byte[MAX_BYTES];
@@ -22,8 +25,5 @@ public final class Client {
                 System.out.printf("%c", bytes[i]);
             }
         }
-    }
-
-    private Client() {
     }
 }
