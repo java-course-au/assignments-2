@@ -27,8 +27,9 @@ public class FTPTest {
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() throws IOException, InterruptedException {
         ftpServer.stop();
+        TimeUnit.SECONDS.sleep(DELAY_SECONDS);
     }
 
     @Test
