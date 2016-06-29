@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
-public class Server {
+public final class Server {
     public static final int PORT = 17239;
     private static final String FILENAME = "datafile";
 
@@ -27,7 +27,8 @@ public class Server {
 
         while (selector.isOpen() && serverSocketChannel.isOpen()) {
             selector.select();
-            for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); iterator.remove()) {
+            for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext();
+                 iterator.remove()) {
                 final SelectionKey selectionKey = iterator.next();
                 if (selectionKey.isAcceptable()) {
                     SocketChannel socketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
@@ -46,5 +47,8 @@ public class Server {
                 }
             }
         }
+    }
+
+    private Server() {
     }
 }

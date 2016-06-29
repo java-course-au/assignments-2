@@ -3,7 +3,7 @@ package ru.spbau.mit;
 import java.io.IOException;
 import java.net.Socket;
 
-public class Client {
+public final class Client {
     private static final int MAX_BYTES = 1000000;
 
     public static void main(String[] args) throws IOException {
@@ -22,5 +22,8 @@ public class Client {
                 System.out.printf("%c", bytes[i]);
             }
         }
+    }
+
+    private Client() {
     }
 }
