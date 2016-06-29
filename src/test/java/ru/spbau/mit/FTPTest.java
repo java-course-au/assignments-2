@@ -1,95 +1,116 @@
 package ru.spbau.mit;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
 
 public class FTPTest {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 17239;
-    private static final int SECOND = 1000;
+    private static final int DELAY_SECONDS = 1;
+    private static final String FILE_CONTENT = "test\ncontent";
+    private static final int CLIENTS_COUNT = 5;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    private File createFileWithContents(String fileName, String content) throws IOException {
-        File file = folder.newFile(fileName);
-        PrintWriter printWriter = new PrintWriter(new FileWriter(file));
-        printWriter.print(content);
-        printWriter.close();
-        return file;
+    private FTPServer ftpServer;
+
+    @Before
+    public void setUp() throws InterruptedException, IOException {
+        ftpServer = runServer();
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        ftpServer.stop();
     }
 
     @Test
-    public void testOperations() throws IOException, InterruptedException {
-        File file = createFileWithContents("file.txt", "test\ncontent");
+    public void testFilesList() throws InterruptedException, IOException {
+        FTPClient ftpClient = runClient();
+        createFileWithContents("file.txt", FILE_CONTENT);
         folder.newFolder("folder");
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    FTPServer ftpServer = new FTPServer(SERVER_PORT);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        thread.start();
-
-        Thread.sleep(SECOND);
-
-        FTPClient ftpClient = new FTPClient(SERVER_HOST, SERVER_PORT);
-
-        List<FTPClient.FileEntry> list = ftpClient.listOperation(folder.getRoot().getAbsolutePath());
+        List<FTPClient.FileEntry> list = ftpClient.getFilesList(folder.getRoot().getAbsolutePath());
         List<FTPClient.FileEntry> expected = Arrays.asList(
                 new FTPClient.FileEntry("folder", true),
                 new FTPClient.FileEntry("file.txt", false)
         );
-        Assert.assertTrue(Arrays.deepEquals(expected.stream().sorted().toArray(),
+        Assert.assertTrue(Arrays.deepEquals(
+                expected.stream().sorted().toArray(),
                 list.stream().sorted().toArray()));
-
-        Assert.assertArrayEquals(
-                "test\ncontent".getBytes(),
-                ftpClient.getOperation(file.getPath())
-        );
-        ftpClient.closeConnection();
+        ftpClient.stop();
     }
 
     @Test
-    public void testNoSuchPathes() throws IOException, InterruptedException {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    FTPServer ftpServer = new FTPServer(SERVER_PORT);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        thread.start();
+    public void testFileContents() throws InterruptedException, IOException {
+        FTPClient ftpClient = runClient();
+        File file = createFileWithContents("file.txt", FILE_CONTENT);
+        folder.newFolder("folder");
 
-        Thread.sleep(SECOND);
+        byte[] fileBytes = new byte[FILE_CONTENT.length()];
+        InputStream fileStream = ftpClient.getFileStream(file.getPath());
+        Assert.assertEquals(FILE_CONTENT.length(), fileStream.read(fileBytes));
+        Assert.assertArrayEquals(FILE_CONTENT.getBytes(), fileBytes);
+        Assert.assertEquals(0, fileStream.available());
+        ftpClient.stop();
+    }
 
+    @Test
+    public void testNoSuchDir() throws InterruptedException, IOException {
+        FTPClient ftpClient = runClient();
+        Assert.assertTrue(ftpClient.getFilesList("No/Such/Path").isEmpty());
+        ftpClient.stop();
+    }
+
+    @Test
+    public void testNoSuchFile() throws InterruptedException, IOException {
+        FTPClient ftpClient = runClient();
+        Assert.assertEquals(0, ftpClient.getFileStream("No/Such/Path.txt").available());
+        ftpClient.stop();
+    }
+
+    @Test
+    public void testNClients() throws InterruptedException, IOException, ExecutionException {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        ArrayList<Future<Void>> results = new ArrayList<>();
+        for (int i = 0; i < CLIENTS_COUNT; i++) {
+            results.add(executorService.submit(() -> {
+                FTPClient ftpClient = runClient();
+                Assert.assertEquals(0, ftpClient.getFileStream("No/Such/Path.txt").available());
+                ftpClient.stop();
+                return null;
+            }));
+        }
+        for (Future result : results) {
+            result.get();
+        }
+    }
+
+    private File createFileWithContents(String fileName, String contents) throws IOException {
+        File file = folder.newFile(fileName);
+        PrintWriter printWriter = new PrintWriter(new FileWriter(file));
+        printWriter.print(contents);
+        printWriter.close();
+        return file;
+    }
+
+    private FTPServer runServer() throws InterruptedException {
+        FTPServer ftpServer = new FTPServer(SERVER_PORT);
+        new Thread(ftpServer::run).start();
+        TimeUnit.SECONDS.sleep(DELAY_SECONDS);
+        return ftpServer;
+    }
+
+    private FTPClient runClient() throws IOException {
         FTPClient ftpClient = new FTPClient(SERVER_HOST, SERVER_PORT);
-
-        List<FTPClient.FileEntry> list = ftpClient.listOperation("No/Such/Path");
-        Assert.assertTrue(list.isEmpty());
-
-        Assert.assertArrayEquals(
-                "".getBytes(),
-                ftpClient.getOperation("No/Such/Path.txt")
-        );
-
-        ftpClient.closeConnection();
+        ftpClient.run();
+        return ftpClient;
     }
 }
